@@ -3,7 +3,7 @@ import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
 import { Connection, EVENT_CONNECTION } from "@jsplumb/core";
 import "@jsplumb/connector-bezier";
 
-type AnyObject = { [index:string]: any };
+export type AnyObject = { [index:string]: any };
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +23,8 @@ export class JsplumbService {
         containment: jsPlumbBrowserUI.ContainmentType.parent
       }
     });
+    this._inputValues = input;
+    this._outputValues = output;
     return this._jspInstance;
   }
 

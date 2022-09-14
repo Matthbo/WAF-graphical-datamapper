@@ -9,12 +9,12 @@ import {JsplumbService} from "../../jsplumb/jsplumb.service";
 })
 export class JsplumbComponent implements AfterViewInit {
 
-  @ViewChild("container")
-  private _container!: ElementRef<HTMLDivElement>;
-  @ViewChild("inputNode")
-  private _inputNode!: ElementRef<HTMLDivElement>;
-  @ViewChild("outputNode")
-  private _outputNode!: ElementRef<HTMLDivElement>;
+  // @ViewChild("container")
+  // private _container!: ElementRef<HTMLDivElement>;
+  // @ViewChild("inputNode")
+  // private _inputNode!: ElementRef<HTMLDivElement>;
+  // @ViewChild("outputNode")
+  // private _outputNode!: ElementRef<HTMLDivElement>;
 
   private EXAMPLE_INPUT: { [index:string]: any } = {
     name: "example",
@@ -37,9 +37,9 @@ export class JsplumbComponent implements AfterViewInit {
   constructor(private jsplumbService: JsplumbService) { }
 
   ngAfterViewInit(): void {
-    this.jsplumbService.createInstance(this._container.nativeElement, this.EXAMPLE_INPUT, this.EXAMPLE_OUTPUT);
-    this.jsplumbService.prepareNodes(this._inputNode.nativeElement, this._outputNode.nativeElement);
-    this.jsplumbService.ready(this.jspReady);
+    // this.jsplumbService.createInstance(this._container.nativeElement, this.EXAMPLE_INPUT, this.EXAMPLE_OUTPUT);
+    // this.jsplumbService.prepareNodes(this._inputNode.nativeElement, this._outputNode.nativeElement);
+    // this.jsplumbService.ready(this.jspReady);
   }
 
   jspReady() {

@@ -1,3 +1,5 @@
+@import "../../jsplumb/jsplumb.service.scss";
+
 #container {
   margin: 0 auto;
   position: relative;
@@ -6,57 +8,3 @@
   border: 2px solid #6b6b6b;
   border-radius: 4px;
 }
-
-.group-node {
-  position: absolute;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: grab;
-}
-
-.group-node > .title {
-  margin-top: 0;
-  font-weight: bold;
-}
-
-.node {
-  /* position: absolute; */
-  padding: 0 8px;
-  margin: 4px 0;
-  border: 2px solid #6b6b6b;
-  border-radius: 4px;
-  cursor: default;
-}
-
-#input-node {
-  background-color: #bebebe;
-}
-
-#output-node {
-  background-color: #fdc300;
-}
-
-.jtk-drag-select * {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.jtk-overlay.overlay-label {
-  z-index: 10;
-}
-
-.jtk-overlay.input-overlay {
-  transform: translate(0, -100%) !important;
-}
-
-.jtk-overlay.output-overlay {
-  transform: translate(-100%, -100%) !important;
-}
-
-/* .jtk-hover {
-    cursor: pointer;
-} */

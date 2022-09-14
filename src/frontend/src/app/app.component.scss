@@ -1,0 +1,30 @@
+nav {
+  padding: 4px 16px;
+  color: #1e1e1e;
+  background-color: #fdc300;
+
+  span.title {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  ul {
+    display: inline-block;
+    padding: 0;
+    list-style-type: none;
+
+    li {
+      display: inline-block;
+      margin: 0 16px;
+
+      a {
+        color: inherit;
+      }
+    }
+  }
+}
+
+main {
+  padding: 8px;
+}
