@@ -16,7 +16,7 @@ export class JsplumbComponent implements AfterViewInit {
   // @ViewChild("outputNode")
   // private _outputNode!: ElementRef<HTMLDivElement>;
 
-  private EXAMPLE_INPUT: { [index:string]: any } = {
+  public EXAMPLE_INPUT: { [index:string]: any } = {
     name: "example",
     value: "input",
     id: 1,
@@ -27,7 +27,7 @@ export class JsplumbComponent implements AfterViewInit {
     }
   }
 
-  private EXAMPLE_OUTPUT = {
+  public EXAMPLE_OUTPUT = {
     prop1: null,
     prop2: null,
     prop3: null,

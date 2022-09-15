@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable, Renderer2} from '@angular/core';
 import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
 import { Connection, EVENT_CONNECTION } from "@jsplumb/core";
 import "@jsplumb/connector-bezier";
@@ -10,13 +10,15 @@ export type AnyObject = { [index:string]: any };
 })
 export class JsplumbService {
 
+  private _renderer?: Renderer2;
   private _jspInstance?: jsPlumbBrowserUI.BrowserJsPlumbInstance;
   private _inputValues?: AnyObject;
   private _outputValues?: AnyObject;
   private _inputElem?: HTMLElement;
   private _outputElem?: HTMLElement;
 
-  createInstance(containerElem: HTMLElement, input: AnyObject, output: AnyObject) {
+  createInstance(renderer: Renderer2, containerElem: HTMLElement, input: AnyObject, output: AnyObject) {
+    this._renderer = renderer;
     this._jspInstance = jsPlumbBrowserUI.newInstance({
       container: containerElem,
       dragOptions: {
@@ -25,12 +27,28 @@ export class JsplumbService {
     });
     this._inputValues = input;
     this._outputValues = output;
-    return this._jspInstance;
+
+    containerElem.classList.add("jsp-container");
+    this.prepareNodes(containerElem);
+
+    // return this._jspInstance;
+    return containerElem;
   }
 
-  prepareNodes(inputEl: HTMLElement, outputEl: HTMLElement){
-    this._inputElem = inputEl;
-    this._outputElem = outputEl;
+  prepareNodes(containerElem: HTMLElement){
+    const inputElem = document.createElement("div");
+    inputElem.id = "input-node";
+    inputElem.classList.add("group-node");
+    // containerElem.appendChild(inputElem);
+    this._renderer!.appendChild(containerElem, inputElem);
+    const outputElem = document.createElement("div");
+    outputElem.id = "output-node";
+    outputElem.classList.add("group-node");
+    // containerElem.appendChild(outputElem);
+    this._renderer!.appendChild(containerElem, outputElem);
+
+    this._inputElem = inputElem;
+    this._outputElem = outputElem;
 
     if(this._inputValues && this._outputValues) {
       Object.entries(this._inputValues).forEach(([key, value]) => {
@@ -40,14 +58,14 @@ export class JsplumbService {
         newVarElem.classList.add("node");
         newVarElem.setAttribute("node-key", key);
         newVarElem.setAttribute("node-value", value);
-        inputEl.appendChild(newVarElem);
+        inputElem.appendChild(newVarElem);
       });
 
       Object.keys(this._outputValues).forEach(value => {
         const newVarElem = document.createElement("div");
         newVarElem.innerText = value;
         newVarElem.classList.add("node");
-        outputEl.appendChild(newVarElem);
+        outputElem.appendChild(newVarElem);
       });
 
       return;
