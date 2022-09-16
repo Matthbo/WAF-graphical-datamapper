@@ -3,7 +3,7 @@ import {
   Directive,
   ElementRef,
   Inject,
-  Input,
+  Input, OnDestroy, Output,
   Renderer2,
   TemplateRef,
   ViewContainerRef
@@ -14,28 +14,35 @@ import {DOCUMENT} from "@angular/common";
 @Directive({
   selector: '[appJsplumb]'
 })
-export class JsplumbDirective implements AfterViewInit {
+export class JsplumbDirective implements AfterViewInit, OnDestroy {
 
   @Input()
-  input: AnyObject = {}
+  input: AnyObject = {};
   @Input()
-  output: AnyObject = {}
+  output: AnyObject = {};
 
-  constructor(private container: ElementRef<HTMLElement>, private viewContainer: ViewContainerRef, private renderer: Renderer2, private jsplumbService: JsplumbService,
-              @Inject(DOCUMENT) private document: Document) {
-    const child = document.createElement('div');
-    this.renderer.appendChild(this.container.nativeElement, child);
+  @Output()
+  mapping: AnyObject = {}; // TODO
+
+  constructor(
+    private container: ElementRef<HTMLElement>,
+    private viewContainer: ViewContainerRef,
+    private renderer: Renderer2,
+    private jsplumbService: JsplumbService,
+    // @Inject(DOCUMENT) private document: Document
+  ) {
     console.log("Directive works")
   }
 
   ngAfterViewInit() {
-    console.log("Input & output", this.input, this.output)
+    this.viewContainer.clear();
 
-    this.jsplumbService.createInstance(this.renderer, this.container.nativeElement, this.input, this.output);
-    // this.jsplumbService.prepareNodes(this._inputNode.nativeElement, this._outputNode.nativeElement);
+    this.jsplumbService.createInstance(this.container.nativeElement, this.input, this.output);
     // this.jsplumbService.ready(this.jspReady);
-    this.viewContainer.element.nativeElement = this.container.nativeElement;
-    // this.viewContainer.clear();
+  }
+
+  ngOnDestroy() {
+    this.jsplumbService.reset();
   }
 
 }

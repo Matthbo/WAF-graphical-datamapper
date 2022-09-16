@@ -1,8 +1,11 @@
-import {Injectable, Renderer2} from '@angular/core';
+import {Inject, Injectable, Renderer2} from '@angular/core';
 import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
-import { Connection, EVENT_CONNECTION } from "@jsplumb/core";
+import {AddGroupOptions, Connection, EVENT_CONNECTION, UIGroup} from "@jsplumb/core";
 import "@jsplumb/connector-bezier";
+import {GroupNode, Node} from "./jsplumb.types";
+import {DOCUMENT} from "@angular/common";
 
+// export const jsPlumb = jsPlumbBrowserUI;
 export type AnyObject = { [index:string]: any };
 
 @Injectable({
@@ -10,15 +13,69 @@ export type AnyObject = { [index:string]: any };
 })
 export class JsplumbService {
 
-  private _renderer?: Renderer2;
   private _jspInstance?: jsPlumbBrowserUI.BrowserJsPlumbInstance;
-  private _inputValues?: AnyObject;
-  private _outputValues?: AnyObject;
-  private _inputElem?: HTMLElement;
-  private _outputElem?: HTMLElement;
+  private _inputNode?: GroupNode<HTMLDivElement>;
+  private _outputNode?: GroupNode<HTMLDivElement>;
 
-  createInstance(renderer: Renderer2, containerElem: HTMLElement, input: AnyObject, output: AnyObject) {
-    this._renderer = renderer;
+  constructor(
+    @Inject(DOCUMENT) private document: Document
+  ) {}
+
+  get inputNode(){
+    return { ...this._inputNode};
+  }
+
+  createInstance(containerElem: HTMLElement, input: AnyObject, output: AnyObject){
+    this._jspInstance = jsPlumbBrowserUI.newInstance({
+      container: containerElem,
+      dragOptions: {
+        containment: jsPlumbBrowserUI.ContainmentType.parent
+      }
+    });
+
+    this._inputNode = this.prepareNode(input);
+    this._outputNode = this.prepareNode(output);
+  }
+
+  private prepareNode(data: AnyObject | any){
+    const nodeElem = document.createElement("div");
+
+    if(typeof data === "object"){
+      const group = this._jspInstance!.addGroup({
+        el: nodeElem,
+        // id: "inputNode",
+        droppable: false,
+        constrain: true,
+        dropOverride: true,
+      }) as UIGroup<HTMLDivElement>
+
+      return {
+        element: nodeElem,
+        group,
+        children: []
+      }
+    }
+    const endpoint = this._jspInstance!.addEndpoint(nodeElem, {
+      endpoint: "Dot",
+      anchor: "Right",
+      target: true,
+    });
+
+    return {
+      element: nodeElem,
+      endpoint
+    }
+  }
+
+  ready = (readyFn: Function) => jsPlumbBrowserUI.ready(() => {
+    this._jspInstance?.batch(() => {
+      // TODO
+    });
+
+    readyFn();
+  });
+
+  /*createInstance(containerElem: HTMLElement, input: AnyObject, output: AnyObject) {
     this._jspInstance = jsPlumbBrowserUI.newInstance({
       container: containerElem,
       dragOptions: {
@@ -39,13 +96,11 @@ export class JsplumbService {
     const inputElem = document.createElement("div");
     inputElem.id = "input-node";
     inputElem.classList.add("group-node");
-    // containerElem.appendChild(inputElem);
-    this._renderer!.appendChild(containerElem, inputElem);
+    // this._renderer!.appendChild(containerElem, inputElem);
     const outputElem = document.createElement("div");
     outputElem.id = "output-node";
     outputElem.classList.add("group-node");
-    // containerElem.appendChild(outputElem);
-    this._renderer!.appendChild(containerElem, outputElem);
+    // this._renderer!.appendChild(containerElem, outputElem);
 
     this._inputElem = inputElem;
     this._outputElem = outputElem;
@@ -90,8 +145,6 @@ export class JsplumbService {
               endpoint: "Dot",
               anchor: "Right",
               target: true,
-              // reattachConnections: true
-              // ...inOutConnectorEndpointOptions(child)
             });
           });
 
@@ -123,6 +176,10 @@ export class JsplumbService {
       });
 
     readyFn();
-  });
+  });*/
+
+  reset(){
+    this._jspInstance = undefined;
+  }
 
 }
