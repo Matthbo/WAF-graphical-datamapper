@@ -8,5 +8,5 @@ export type Node<E extends HTMLElement> = {
 export type GroupNode<E extends HTMLElement> = {
   element: E;
   group: UIGroup<E>
-  children: Node<HTMLElement>[];
+  children: (GroupNode<HTMLElement> | Node<HTMLElement>)[];
 }
