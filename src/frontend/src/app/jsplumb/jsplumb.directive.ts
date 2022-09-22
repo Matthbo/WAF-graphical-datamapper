@@ -1,7 +1,7 @@
 import {
   AfterViewInit,
   Directive,
-  ElementRef,
+  ElementRef, EventEmitter,
   Inject,
   Input, OnDestroy, OnInit, Output,
   Renderer2,
@@ -24,7 +24,7 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
   output: AnyObject = {};
 
   @Output()
-  mapping: AnyObject = {}; // TODO
+  mapping = new EventEmitter<AnyObject>(); // TODO
 
   constructor(
     private container: ElementRef<HTMLElement>,
@@ -53,8 +53,8 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
     inputNode.style.top = `${(containerElem.clientHeight-inputNode.clientHeight)/2}px`;
     inputNode.style.left = `${(containerElem.clientWidth-inputNode.clientWidth)/4}px`;
     const outputNode = document.querySelector<HTMLDivElement>("#output-node")!;
-    outputNode.style.top = `${(containerElem.clientHeight-inputNode.clientHeight)/2}px`;
-    outputNode.style.left = `${(containerElem.clientWidth-inputNode.clientWidth)/4*3}px`;
+    outputNode.style.top = `${(containerElem.clientHeight-outputNode.clientHeight)/2}px`;
+    outputNode.style.left = `${(containerElem.clientWidth-outputNode.clientWidth)/4*3}px`;
   }
 
   renderNodes(groupNode: GroupNode<HTMLElement>, parentElem: HTMLElement, parentGroup?: UIGroup<HTMLElement>, title?: string) {
