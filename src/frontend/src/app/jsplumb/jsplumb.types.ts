@@ -2,38 +2,38 @@ import { Endpoint, UIGroup } from "@jsplumb/core";
 
 export type Node<E extends HTMLElement> = {
   element: E;
+  path: string;
   endpoint: Endpoint<E>;
 }
 
 export type GroupNode<E extends HTMLElement> = {
   element: E;
+  path: string;
   group: UIGroup<E>
   children: (GroupNode<HTMLElement> | Node<HTMLElement>)[];
 }
 
-export type NodeMapInfo<T> = {
-  parentNode: NodeMapInfo<object> | null; // can be object or array
+export type NodeMapInfo = {
+  parentNode: NodeMapInfo | null; // can be object or array
   key: string;
   type: string;
-  value: T
 }
 
-export interface Mapping<T> {
-  sourceNode: NodeMapInfo<T>;
-  targetNode: NodeMapInfo<T>;
+export interface Mapping {
+  sourceNode: NodeMapInfo;
+  targetNode: NodeMapInfo;
   transformation?: unknown;
   condition?: unknown;
-  toSerializable: () => SerializableMapping<T>;
+  toSerializable: () => SerializableMapping;
 }
 
-export type SerializableNodeMapInfo<T> = {
+export type SerializableNodeMapInfo = {
   parentPath: string;
   key: string;
   type: string;
-  value: T
 }
 
-export type SerializableMapping<T> = {
-  sourceNode: SerializableNodeMapInfo<T>;
-  targetNode: SerializableNodeMapInfo<T>;
+export type SerializableMapping = {
+  sourceNode: SerializableNodeMapInfo;
+  targetNode: SerializableNodeMapInfo;
 }

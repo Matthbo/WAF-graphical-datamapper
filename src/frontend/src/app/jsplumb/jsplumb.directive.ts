@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import {AnyObject, JsplumbService} from "./jsplumb.service";
 import {DOCUMENT} from "@angular/common";
-import {GroupNode, Node} from "./jsplumb.types";
+import {GroupNode, Mapping, Node} from "./jsplumb.types";
 import {UIGroup} from "@jsplumb/core";
 import { BrowserJsPlumbInstance } from "@jsplumb/browser-ui";
 
@@ -24,7 +24,7 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
   output: AnyObject = {};
 
   @Output()
-  mapping = new EventEmitter<AnyObject>(); // TODO
+  mapping = new EventEmitter<Mapping[]>(); // TODO
 
   constructor(
     private container: ElementRef<HTMLElement>,
@@ -41,6 +41,12 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
     this.jsplumbService.createInstance(containerElem, this.input, this.output);
 
     this.jsplumbService.ready(() => this.onReady());
+
+    // this.jsplumbService.updateMappingsEvent.subscribe((mappings: Mapping[]) => this.mapping.emit(mappings));
+    this.jsplumbService.updateMappingsEvent.subscribe((mappings: Mapping[]) => {
+      console.log("service mappings trigger");
+      this.mapping.emit(mappings);
+    });
   }
 
   onReady(){

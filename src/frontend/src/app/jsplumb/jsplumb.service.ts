@@ -1,4 +1,4 @@
-import {Inject, Injectable, Renderer2} from '@angular/core';
+import {EventEmitter, Inject, Injectable, Renderer2} from '@angular/core';
 import * as jsPlumbBrowserUI from "@jsplumb/browser-ui";
 import {AddGroupOptions, Connection, EVENT_CONNECTION, UIGroup} from "@jsplumb/core";
 import "@jsplumb/connector-bezier";
@@ -7,7 +7,7 @@ import {DOCUMENT} from "@angular/common";
 import {AnchorSpec} from "@jsplumb/common";
 
 export type AnyObject = { [index:string]: any };
-type MockValues = { key: string, value: string, type: string };
+type MockValues = { key: string, type: string, path: string };
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,9 @@ export class JsplumbService {
   private _jspInstance?: jsPlumbBrowserUI.BrowserJsPlumbInstance;
   private _inputNode?: GroupNode<HTMLDivElement>;
   private _outputNode?: GroupNode<HTMLDivElement>;
-  private _mappings?: Mapping<any>[];
+  private _mappings: Mapping[] = [];
+
+  public updateMappingsEvent= new EventEmitter<Mapping[]>();
 
   constructor(
     @Inject(DOCUMENT) private document: Document
@@ -54,20 +56,26 @@ export class JsplumbService {
       dropOverride: true,
     }) as UIGroup<HTMLDivElement>
 
-    const children = Object.entries(nodeData).map(data => this.prepareNode(data, endpointAlign ?? "Right", parentNodeId));
+    const basePath = "/"
+
+    const children = Object.entries(nodeData).map(data => this.prepareNode(data, endpointAlign ?? "Right", basePath, parentNodeId));
 
     return {
       element: nodeElem,
+      path: basePath,
       group,
       children
     }
   }
 
-  private prepareNode([name, data]: [string, any], endpointAlign: AnchorSpec, groupId?: string): GroupNode<HTMLElement> | Node<HTMLElement> {
+  private prepareNode([name, data]: [string, any], endpointAlign: AnchorSpec, path: string, groupId?: string): GroupNode<HTMLElement> | Node<HTMLElement> {
     const nodeElem = document.createElement("div");
     nodeElem.setAttribute("node-key", name);
     nodeElem.setAttribute("node-type", data == null ? "null" : typeof data );
     nodeElem.setAttribute("node-value", data);
+    nodeElem.setAttribute("node-path", path);
+
+    const deeperPath = path === "/" ? path+name : `${path}/${name}`;
 
     if(typeof data === "object" && data !== null){
       const group = this._jspInstance!.addGroup({
@@ -80,8 +88,9 @@ export class JsplumbService {
 
       return {
         element: nodeElem,
+        path: deeperPath,
         group,
-        children: Object.entries(data).map(data => this.prepareNode(data, endpointAlign, groupId))
+        children: Object.entries(data).map(data => this.prepareNode(data, endpointAlign, deeperPath, groupId))
       }
     }
     const endpoint = this._jspInstance!.addEndpoint(nodeElem, {
@@ -94,6 +103,7 @@ export class JsplumbService {
 
     return {
       element: nodeElem,
+      path: deeperPath,
       endpoint
     }
   }
@@ -108,7 +118,7 @@ export class JsplumbService {
 
     instance.bind(EVENT_CONNECTION, (event) => {
       const [sourceEndpoint, targetEndpoint] = event.connection.endpoints;
-      console.log(event);
+      // console.log(event);
 
       const overlays = (event.connection as Connection).overlays;
       const overlayKeys = Object.keys(overlays);
@@ -148,41 +158,42 @@ export class JsplumbService {
         }
       });
 
-      // TODO register as mapping
-      addMapping();
+      const sourceVals: MockValues = { key: event.source.getAttribute("node-key"), type: event.source.getAttribute("node-type"), path: event.source.getAttribute("node-path") };
+      const targetVals: MockValues = { key: event.target.getAttribute("node-key"), type: event.target.getAttribute("node-type"), path: event.target.getAttribute("node-path") };
+      sourceIsInput ? this.addMapping(sourceVals, targetVals) : this.addMapping(targetVals, sourceVals);
     });
   });
 
-  // TODO get the real nodes
-  addMapping(sourceValues: MockValues, targetValues: MockValues){
-    sourceValues.type;
+  // TODO get from the real nodes (this._inputNode & this._outputNode)
+  addMapping(inputValues: MockValues, outputValues: MockValues){
     const newMapping: Mapping = {
       sourceNode: {
         parentNode: null, //TODO
-        key: sourceValues.key,
-        type: sourceValues.type,
-        value: sourceValues.value
+        key: inputValues.key,
+        type: inputValues.type,
       },
       targetNode: {
-
+        parentNode: null, //TODO
+        key: outputValues.key,
+        type: outputValues.type,
       },
       toSerializable: function(){
         return {
           sourceNode: {
-            parentPath: "", // TODO
+            parentPath: inputValues.path,
             key: this.sourceNode.key,
             type: this.sourceNode.type,
-            value: this.sourceNode.value
           },
           targetNode: {
-            parentPath: "", // TODO
+            parentPath: outputValues.path,
             key: this.targetNode.key,
             type: this.targetNode.type,
-            value: this.targetNode.value
           }
         }
       }
     }
+    this._mappings.push(newMapping);
+    this.updateMappingsEvent.emit(this._mappings);
   }
 
   addToGroup(group: UIGroup<HTMLElement>, element: HTMLElement){
@@ -190,7 +201,10 @@ export class JsplumbService {
   }
 
   reset(){
-    this._jspInstance = undefined;
+    delete this._jspInstance;
+    delete this._inputNode;
+    delete this._outputNode;
+    this._mappings = [];
   }
 
 }

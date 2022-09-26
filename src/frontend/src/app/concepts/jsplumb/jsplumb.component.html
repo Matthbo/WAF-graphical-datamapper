@@ -1,4 +1,29 @@
 <div class="flexbox">
-  <div appJsplumb [input]="EXAMPLE_INPUT" [output]="EXAMPLE_OUTPUT">Loading</div>
-  <div></div>
+  <div appJsplumb [input]="EXAMPLE_INPUT" [output]="EXAMPLE_OUTPUT" (mapping)="updateMappings($event)">Loading</div>
+  <div class="info">
+    <h2>Mappings</h2>
+    <table>
+      <thead>
+        <th>Input element</th>
+        <th>Input type</th>
+        <th>Input path</th>
+        <th>Transformation</th>
+        <th>Condition</th>
+        <th>Output element</th>
+        <th>Output type</th>
+        <th>Output path</th>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mapping of displayMappings">
+          <td>{{mapping.sourceNode.key}}</td>
+          <td>{{mapping.sourceNode.type}}</td>
+          <td>{{mapping.sourceNode.parentPath}}</td>
+          <td>TODO</td>
+          <td>TODO</td>
+          <td>{{mapping.targetNode.key}}</td>
+          <td>{{mapping.targetNode.type}}</td>
+          <td>{{mapping.targetNode.parentPath}}</td>
+        </tr>
+    </table>
+  </div>
 </div>
