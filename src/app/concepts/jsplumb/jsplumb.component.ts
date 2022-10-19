@@ -1,5 +1,4 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {JsplumbService} from "../../jsplumb/jsplumb.service";
 import {Mapping, SerializableMapping} from "../../jsplumb/jsplumb.types";
 
 
@@ -8,7 +7,7 @@ import {Mapping, SerializableMapping} from "../../jsplumb/jsplumb.types";
   templateUrl: './jsplumb.component.html',
   styleUrls: ['./jsplumb.component.scss']
 })
-export class JsplumbComponent implements AfterViewInit {
+export class JsplumbComponent {
 
   public displayMappings: SerializableMapping[] = [];
 
@@ -28,14 +27,6 @@ export class JsplumbComponent implements AfterViewInit {
     prop2: null,
     prop3: null,
     prop4: null
-  }
-
-  constructor(private jsplumbService: JsplumbService) { }
-
-  ngAfterViewInit(): void {
-    // this.jsplumbService.createInstance(this._container.nativeElement, this.EXAMPLE_INPUT, this.EXAMPLE_OUTPUT);
-    // this.jsplumbService.prepareNodes(this._inputNode.nativeElement, this._outputNode.nativeElement);
-    // this.jsplumbService.ready(this.jspReady);
   }
 
   updateMappings(mappings: Mapping[]) {

@@ -1,8 +1,0 @@
-version: "3.9"  # optional since v1.27.0
-services:
-  web:
-    image: tomcat:9.0
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./tomcat:/usr/local/tomcat
