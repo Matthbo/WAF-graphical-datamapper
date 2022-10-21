@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { SerializableMapping } from 'src/app/jsplumb/jsplumb.types';
+import { Mapping, SerializableMapping } from 'src/app/jsplumb/jsplumb.types';
 
 @Component({
   selector: 'app-d3',
@@ -28,9 +28,8 @@ export class D3Component {
     prop4: null
   }
 
-  updateMappings(mappings: Mapping[]) {
-    this.displayMappings = mappings.map(m => m.toSerializable());
-    console.log("updated mappings", this.displayMappings);
+  updateMappings(mappings: SerializableMapping[]) {
+    this.displayMappings = mappings;
   }
 
 }

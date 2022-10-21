@@ -14,7 +14,6 @@ import { BrowserJsPlumbInstance } from "@jsplumb/browser-ui";
 
 @Directive({
   selector: '[appJsplumb]',
-
 })
 export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
 
@@ -24,7 +23,7 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
   output: AnyObject = {};
 
   @Output()
-  mapping = new EventEmitter<Mapping[]>(); // TODO
+  mapping = new EventEmitter<Mapping[]>();
 
   constructor(
     private container: ElementRef<HTMLElement>,
@@ -55,10 +54,10 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
     this.renderNodes(this.jsplumbService.inputNode, containerElem, undefined, "Input");
     this.renderNodes(this.jsplumbService.outputNode, containerElem, undefined, "Output");
 
-    const inputNode = document.querySelector<HTMLDivElement>("#input-node")!;
+    const inputNode = this.document.querySelector<HTMLDivElement>("#input-node")!;
     inputNode.style.top = `${(containerElem.clientHeight-inputNode.clientHeight)/2}px`;
     inputNode.style.left = `${(containerElem.clientWidth-inputNode.clientWidth)/4}px`;
-    const outputNode = document.querySelector<HTMLDivElement>("#output-node")!;
+    const outputNode = this.document.querySelector<HTMLDivElement>("#output-node")!;
     outputNode.style.top = `${(containerElem.clientHeight-outputNode.clientHeight)/2}px`;
     outputNode.style.left = `${(containerElem.clientWidth-outputNode.clientWidth)/4*3}px`;
   }
@@ -71,7 +70,7 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
       element.innerText = `${element.getAttribute("node-key")}: ${element.getAttribute("node-type")}`;
       element.classList.add("group-node", "node");
     } else { // Base groups
-      const titleElem = document.createElement("p");
+      const titleElem = this.document.createElement("p");
       titleElem.classList.add("title");
       titleElem.innerText = title ?? "Group";
       element.classList.add("base-group-node");

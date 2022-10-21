@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import {JsplumbDirective} from "./jsplumb/jsplumb.directive";
 import {D3Directive} from "./d3/d3.directive";
 
+const directives = [
+  JsplumbDirective,
+  D3Directive
+];
+
 @NgModule({
-  declarations: [
-    JsplumbDirective,
-    D3Directive
-  ],
+  declarations: directives,
   imports: [
     CommonModule
   ],
-  exports: [
-    JsplumbDirective
-  ]
+  exports: directives
 })
 export class DirectivesModule { }
