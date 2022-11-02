@@ -13,5 +13,16 @@ svg[appD3] {
     stroke-width: 1px;
   }
 
+  circle.dragging {
+    fill: #b7b7b7;
+  }
+  
+  path.dragging,
+  g.connections path {
+    fill: none;
+    stroke: #b7b7b7;
+    stroke-width: 2px;
+  }
+
 }
 

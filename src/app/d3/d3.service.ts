@@ -101,15 +101,11 @@ export class D3Service {
   }
 
   generateCluster(cluster: d3.HierarchyPointNode<DataNode>, containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) {
-    // d3.select(document.querySelector<SVGGElement>(`${containerSelector} ${nodesSelector}`)!.parentElement)
-    //   .attr('offsetWidth', offsetWidth)
-    //   .attr('offsetHeight', offsetHeight);
-
     const svgElem = typeof containerElem === 'string' ?
       d3.select<SVGSVGElement, unknown>(document.querySelector<SVGGElement>(containerElem)!.parentElement as Element as SVGSVGElement) :
       d3.select<SVGSVGElement, unknown>(containerElem.parentElement as Element as SVGSVGElement);
 
-    svgElem
+    this.getD3Selection(containerElem)
       .attr('offsetWidth', offsetWidth)
       .attr('offsetHeight', offsetHeight);
 
