@@ -15,7 +15,7 @@ import { BrowserJsPlumbInstance } from "@jsplumb/browser-ui";
 @Directive({
   selector: '[appJsplumb]',
 })
-export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
+export class JsplumbDirective implements AfterViewInit, OnDestroy {
 
   @Input()
   input: AnyObject = {};
@@ -31,8 +31,6 @@ export class JsplumbDirective implements OnInit, AfterViewInit, OnDestroy {
     private jsplumbService: JsplumbService,
     @Inject(DOCUMENT) private document: Document
   ) {}
-
-  ngOnInit() {}
 
   ngAfterViewInit() {
     const containerElem = this.container.nativeElement;

@@ -1,20 +1,20 @@
 export type AnyObject = { [index: string]: any };
 
-export type Node = {
+export type DataNode = {
     key: string;
     // type: string;
     // path
     // element
 } & (
-    {
-        type: "object";
-        children: Node[];
-    } | 
-    {
-        type: string;
-        value: any;
-    }
-)
+        {
+            type: "object";
+            children: DataNode[];
+        } |
+        {
+            type: string;
+            value: any;
+        }
+    )
 /*     & (ObjectNodePartial | ValueNodePartial);
 
 export type ObjectNodePartial = {

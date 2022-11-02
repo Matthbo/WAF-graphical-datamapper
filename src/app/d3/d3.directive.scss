@@ -1,5 +1,17 @@
-// TODO check if svg
-[appD3] {
+svg[appD3] {
   min-width: 50px;
   min-height: 50px;
+
+  .node {
+    fill: steelblue;
+    stroke: none;
+  }
+
+  .link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1px;
+  }
+
 }
+
