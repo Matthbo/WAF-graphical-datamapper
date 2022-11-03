@@ -6,26 +6,15 @@ export type DataNode = {
     // path
     // element
 } & (
-        {
-            type: "object";
-            children: DataNode[];
-        } |
-        {
-            type: string;
-            value: any;
-        }
-    )
-/*     & (ObjectNodePartial | ValueNodePartial);
-
-export type ObjectNodePartial = {
-    type: "object";
-    children: Node[];
-}
-
-export type ValueNodePartial = {
-    type: string;
-    value: any;
-} */
+    {
+        type: "object";
+        children: DataNode[];
+    } |
+    {
+        type: string;
+        value: any;
+    }
+)
 
 export type SerializableNodeMapInfo = {
     parentPath: string;

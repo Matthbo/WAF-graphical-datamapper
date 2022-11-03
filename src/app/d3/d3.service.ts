@@ -21,6 +21,7 @@ export class D3Service {
     }
     return d3.select<GElement, OldDatum>(element) as unknown as d3.Selection<GElement, OldDatum, Element, any>;
   }
+
   private getD3ChildSelection<PElem extends SVGElement, /* CElem extends SVGElement,  */OldDatum>(container: PElem | string, childSelector: string) {
     if (typeof container === "string") {
       return d3.select<SVGGElement, OldDatum>(`${container} ${childSelector}`) as d3.Selection<SVGGElement, OldDatum, Element, any>;
@@ -37,7 +38,6 @@ export class D3Service {
         children: Object.entries(data).map(([key, value]) => this.convertData(key, value))
       }
     }
-
     return {
       key: rootName,
       value: data,
@@ -53,7 +53,6 @@ export class D3Service {
   }
 
   generateClusterNodes(clusterDecendants: d3.HierarchyPointNode<DataNode>[], containerElem: SVGGElement | string, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, clusterWidth: number, offsetWidth: number, offsetHeight: number, invertAxis: boolean) {
-    // d3.select<SVGElement, unknown>(`${containerSelector} .nodes`)
     const link = d3.link(d3.curveBumpX);
     this.getD3ChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
       .selectAll<SVGCircleElement, unknown>('circle.node')

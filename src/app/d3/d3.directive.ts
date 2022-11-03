@@ -30,21 +30,13 @@ export class D3Directive implements AfterViewInit, OnDestroy {
     return child;
   }
 
-  private testSVGCursor(event: MouseEvent){
-    const svg = this.container.nativeElement as SVGSVGElement;
-
-    // @ts-ignore
-    const pt = svg.createSVGPoint();
-    pt.x = event.clientX; pt.y = event.clientY;
-    const svgCoords = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    console.log(svgCoords)
-  }
-
   ngAfterViewInit(): void {
     const containerElem = this.container.nativeElement;
     containerElem.innerHTML = "";
+    const svgWidth = containerElem.clientWidth;
+    const svgHeight = containerElem.clientHeight;
 
-    const connectionsElem = this.createChildElement(containerElem, "g", "connections");
+    this.createChildElement(containerElem, "g", "connections");
     const inputElem = this.createChildElement(containerElem, "g", "input-node");
     this.createChildElement(inputElem, "g", "links");
     this.createChildElement(inputElem, "g", "nodes");
@@ -57,14 +49,13 @@ export class D3Directive implements AfterViewInit, OnDestroy {
     const inputData = this.d3Service.convertData("input", this.input);
     const outputData = this.d3Service.convertData("output", this.output);
 
-    // TODO get correct width and height
-    const inputCluster = this.d3Service.createCluster(inputData, 300, 720);
-    this.d3Service.generateCluster(inputCluster, inputElem, 300, 20, 0, false);
+    // TODO resize on window resize
 
-    const outputCluster = this.d3Service.createCluster(outputData, 300, 720);
-    this.d3Service.generateCluster(outputCluster, outputElem, 300, 496, 0, true);
-  
-    containerElem.onclick = this.testSVGCursor.bind(this);
+    const clusterWidth = svgWidth / 2 - 200;
+    const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, 720);
+    this.d3Service.generateCluster(inputCluster, inputElem, clusterWidth, 40, 0, false);
+    const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, 720);
+    this.d3Service.generateCluster(outputCluster, outputElem, clusterWidth, svgWidth / 2 + 160, 0, true);
   }
 
   ngOnDestroy(): void {
