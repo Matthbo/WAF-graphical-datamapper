@@ -30,18 +30,21 @@ export class D3Service {
       .select<SVGGElement>(childSelector);
   }
 
-  convertData(rootName: string, data: any): DataNode {
+  convertData(rootName: string, data: any, id?: string): DataNode {
+    const rootId = id || rootName;
     if (data !== null && typeof data === "object") {
       return {
         key: rootName,
         type: "object",
-        children: Object.entries(data).map(([key, value]) => this.convertData(key, value))
+        id: rootId,
+        children: Object.entries(data).map(([key, value]) => this.convertData(key, value, rootId))
       }
     }
     return {
       key: rootName,
       value: data,
-      type: data === null ? "null" : typeof data
+      type: data === null ? "null" : typeof data,
+      id: rootId
     }
   }
 
@@ -65,7 +68,7 @@ export class D3Service {
       .call(d3.drag<SVGCircleElement, HierarchyPointNode<DataNode>>()
         .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgSelection, offsetWidth, offsetHeight, link))
         .on("drag", this.handleSVGDragging(svgSelection, link))
-        .on("end", this.handleSVGDragStop(clusterWidth, invertAxis, svgSelection, offsetWidth, offsetHeight, link))
+        .on("end", this.handleSVGDragStop(clusterWidth, invertAxis, svgSelection, offsetWidth, offsetHeight, link, this.addMapping.bind(this)))
       )
   }
 
@@ -165,7 +168,7 @@ export class D3Service {
     }
   }
 
-  private handleSVGDragStop(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
+  private handleSVGDragStop(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, addMappingFn: (s: d3.HierarchyPointNode<DataNode>, t: d3.HierarchyPointNode<DataNode>) => void) {
     return function <T extends Element>(this: T, event: D3DragEvent<T, unknown, HierarchyPointNode<DataNode>>, d: HierarchyPointNode<DataNode>) {
       const mouseEvent = event.sourceEvent as MouseEvent;
       const targetElem = d3.select<SVGPathElement | Element, HierarchyPointNode<DataNode>>(mouseEvent.target as Element);
@@ -190,8 +193,44 @@ export class D3Service {
             source: [sourceX, sourceY],
             target: [targetX, targetY]
           }));
+
+        const sourceIsInput = d.data.id === "input";
+
+        sourceIsInput ? addMappingFn(d, targetNode) : addMappingFn(targetNode, d);
       }
     }
+  }
+
+  private addMapping(source: d3.HierarchyPointNode<DataNode>, target: d3.HierarchyPointNode<DataNode>){
+    function getPath(node: d3.HierarchyPointNode<DataNode>): string{
+      if (node.parent == null || node.parent.depth == 0){
+        return node.height == 0 ? "/" : "";
+      }
+
+      console.log(node, node.data.key)
+
+      return `${getPath(node.parent)}/${node.parent.data.key}`;
+    }
+
+    const newMapping: SerializableMapping = {
+      sourceNode: {
+        parentPath: getPath(source),
+        key: source.data.key,
+        type: source.data.type
+      },
+      targetNode: {
+        parentPath: getPath(target),
+        key: target.data.key,
+        type: target.data.type
+      }
+    }
+
+    this._mappings.push(newMapping);
+    this.updateMappingsEvent.emit(this._mappings);
+  }
+
+  reset(){
+    this._mappings = [];
   }
 
 }

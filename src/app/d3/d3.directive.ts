@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { AfterViewInit, Directive, ElementRef, EventEmitter, Inject, Input, OnDestroy, OnInit, Output, Renderer2 } from '@angular/core';
+import { AfterViewChecked, AfterViewInit, Directive, DoCheck, ElementRef, EventEmitter, Inject, Input, OnDestroy, OnInit, Output, Renderer2 } from '@angular/core';
 import { D3Service } from './d3.service';
 import { AnyObject, SerializableMapping } from './d3.types';
 
@@ -21,7 +21,9 @@ export class D3Directive implements AfterViewInit, OnDestroy {
     private renderer: Renderer2,
     private d3Service: D3Service,
     @Inject(DOCUMENT) private document: Document
-  ) {}
+  ) {
+    document.defaultView!.addEventListener("resize", this.onResize);
+  }
 
   createChildElement<K extends keyof SVGElementTagNameMap>(parent: Element, tagName: K, classAttr: string) {
     const child = this.document.createElementNS<K>("http://www.w3.org/2000/svg", tagName);
@@ -50,16 +52,23 @@ export class D3Directive implements AfterViewInit, OnDestroy {
     const outputData = this.d3Service.convertData("output", this.output);
 
     // TODO resize on window resize
-
     const clusterWidth = svgWidth / 2 - 200;
-    const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, 720);
+    const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, svgHeight);
     this.d3Service.generateCluster(inputCluster, inputElem, clusterWidth, 40, 0, false);
-    const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, 720);
+    const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, svgHeight);
     this.d3Service.generateCluster(outputCluster, outputElem, clusterWidth, svgWidth / 2 + 160, 0, true);
+  
+    this.d3Service.updateMappingsEvent.subscribe((mappings: SerializableMapping[]) => {
+      this.mapping.emit(mappings);
+    });
+  }
+
+  onResize() {
+    console.log("resized");
   }
 
   ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
+    this.d3Service.reset();
   }
 
 }

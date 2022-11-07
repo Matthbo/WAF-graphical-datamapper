@@ -8,7 +8,7 @@ const routes: Routes = [
   { path: '', redirectTo: '/concepts/jsplumb', pathMatch: 'full' },
   { path: 'concepts', children: [
       { path: "jsplumb", component: JsplumbComponent },
-      { path: "node-red", component: NodeRedComponent },
+      // { path: "node-red", component: NodeRedComponent },
       { path: "d3", component: D3Component },
   ]}
 ];

@@ -21,8 +21,6 @@ export class JsplumbService {
 
   public updateMappingsEvent= new EventEmitter<Mapping[]>();
 
-  /* constructor() {} */
-
   get inputNode(){
     return { ...this._inputNode! };
   }
