@@ -207,8 +207,6 @@ export class D3Service {
         return node.height == 0 ? "/" : "";
       }
 
-      console.log(node, node.data.key)
-
       return `${getPath(node.parent)}/${node.parent.data.key}`;
     }
 
