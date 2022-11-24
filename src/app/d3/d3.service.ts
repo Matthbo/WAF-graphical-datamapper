@@ -1,7 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
-import { SerializableMapping, DataNode } from './d3.types';
+import { SerializableMapping, DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra } from './d3.types';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class D3Service {
 
   constructor() { }
 
-  getD3Selection<GElement extends BaseType, OldDatum>(element: GElement | string) {
+  getSelection<GElement extends BaseType, OldDatum>(element: GElement | string) {
     // check to make typescript happy
     if (typeof element === "string") {
       return d3.select<GElement, OldDatum>(element) as d3.Selection<GElement, OldDatum, Element, any>;
@@ -22,7 +22,7 @@ export class D3Service {
     return d3.select<GElement, OldDatum>(element) as unknown as d3.Selection<GElement, OldDatum, Element, any>;
   }
 
-  private getD3ChildSelection<PElem extends SVGElement, /* CElem extends SVGElement,  */OldDatum>(container: PElem | string, childSelector: string) {
+  private getChildSelection<PElem extends SVGElement, /* CElem extends SVGElement,  */OldDatum>(container: PElem | string, childSelector: string) {
     if (typeof container === "string") {
       return d3.select<SVGGElement, OldDatum>(`${container} ${childSelector}`) as d3.Selection<SVGGElement, OldDatum, Element, any>;
     }
@@ -57,7 +57,7 @@ export class D3Service {
 
   generateClusterNodes(clusterDecendants: d3.HierarchyPointNode<DataNode>[], containerElem: SVGGElement | string, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, clusterWidth: number, offsetWidth: number, offsetHeight: number, invertAxis: boolean) {
     const link = d3.link(d3.curveBumpX);
-    this.getD3ChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
+    this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
       .selectAll<SVGCircleElement, unknown>('circle.node')
       .data(clusterDecendants)
       .join<SVGCircleElement>('circle')
@@ -74,7 +74,7 @@ export class D3Service {
 
   generateClusterLinks(clusterLinks: d3.HierarchyPointLink<DataNode>[], containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number, offsetHeight: number, invertAxis: boolean) {
     const link = d3.link(d3.curveBumpX);
-    this.getD3ChildSelection<SVGGElement, unknown>(containerElem, '.links')
+    this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
       .selectAll('path.link')
       .data(clusterLinks)
       .join('path')
@@ -91,7 +91,7 @@ export class D3Service {
   }
 
   generateClusterOverlay(clusterDecendants: d3.HierarchyPointNode<DataNode>[], containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number, offsetHeight: number, invertAxis: boolean) {
-    this.getD3ChildSelection<SVGGElement, unknown>(containerElem, '.overlay')
+    this.getChildSelection<SVGGElement, unknown>(containerElem, '.overlay')
       .selectAll('text')
       .data(clusterDecendants)
       .join('text')
@@ -102,12 +102,87 @@ export class D3Service {
       .attr('transform', (d) => !invertAxis ? `translate(-10, 4)` : `translate(10, 4)`);
   }
 
+  // TODO new function to update cluster, also used on creation instead of generateCluster
+  // https://observablehq.com/@d3/collapsible-tree
+  newGenerateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
+    //TODO find out how to update positions/coordinates
+
+    const root = d3.hierarchy(data);
+    const clusterLayout = d3.cluster<DataNode>()
+      .size([clusterHeight, clusterWidth]);
+
+    root.descendants().forEach((d: HierarchyNodeExtra<DataNode>, i) => {
+      d._id = i;
+      d._children = d.children;
+      if(d.depth > 0) d.children = undefined;
+    })
+
+    console.log("hierarchy", root);
+
+    // node = clicked node
+    const update = (node: HierarchyNodeExtra<DataNode>) => {
+      // const nodes = node.descendants(); //.reverse();
+      // const links = node.links();
+      // const parent = node.parent;
+      console.log("update",root);
+
+      const rootNode = clusterLayout(root);
+
+      const nodes = rootNode.descendants();
+      const links = rootNode.links();
+
+      return (containerElem: SVGGElement | string, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) => {
+        const link = d3.link(d3.curveBumpX);
+
+        const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
+          .selectAll<SVGCircleElement, unknown>('circle.node')
+          .data(nodes)
+          .join<SVGCircleElement>('circle')
+          .classed('node', true)
+          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
+          .attr('cy', (d) => { return d.x + offsetHeight; })
+          .attr('r', 4)
+          .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
+            if (d.children) {
+              d.children = undefined;
+              d.parent!.children = d.parent?._children;
+            } else {
+              d.children = d._children;
+              console.log(d.parent?.children?.filter((child) => child._id == d._id))
+              d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
+            }
+            update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
+          })
+
+        // TODO make nodeElems g elements, enter and append text & circle elements instead
+
+        this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
+          .selectAll('path.link')
+          .data(links)
+          .join('path')
+          .classed('link', true)
+          .attr('d', (d) =>
+            !invertAxis ? link({
+              source: [d.source.y + offsetWidth, d.source.x + offsetHeight],
+              target: [d.target.y + offsetWidth, d.target.x + offsetHeight]
+            }) : link({
+              source: [clusterWidth - d.source.y + offsetWidth, d.source.x + offsetHeight],
+              target: [clusterWidth - d.target.y + offsetWidth, d.target.x + offsetHeight]
+            })
+          );
+
+      }
+    }
+
+    return update(root);
+  }
+
   generateCluster(cluster: d3.HierarchyPointNode<DataNode>, containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) {
     const svgElem = typeof containerElem === 'string' ?
       d3.select<SVGSVGElement, unknown>(document.querySelector<SVGGElement>(containerElem)!.parentElement as Element as SVGSVGElement) :
       d3.select<SVGSVGElement, unknown>(containerElem.parentElement as Element as SVGSVGElement);
 
-    this.getD3Selection(containerElem)
+    this.getSelection(containerElem)
       .attr('offsetWidth', offsetWidth)
       .attr('offsetHeight', offsetHeight);
 

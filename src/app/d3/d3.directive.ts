@@ -53,10 +53,17 @@ export class D3Directive implements AfterViewInit, OnDestroy {
 
     // TODO resize on window resize
     const clusterWidth = svgWidth / 2 - 200;
-    const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, svgHeight);
-    this.d3Service.generateCluster(inputCluster, inputElem, clusterWidth, 40, 0, false);
-    const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, svgHeight);
-    this.d3Service.generateCluster(outputCluster, outputElem, clusterWidth, svgWidth / 2 + 160, 0, true);
+    // const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, svgHeight);
+    // console.log("input cluster", inputCluster);
+    // this.d3Service.generateCluster(inputCluster, inputElem, clusterWidth, 40, 0, false);
+    // const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, svgHeight);
+    // this.d3Service.generateCluster(outputCluster, outputElem, clusterWidth, svgWidth / 2 + 160, 0, true);
+
+    const generateInputCluster = this.d3Service.newGenerateCluster(inputData, clusterWidth, svgHeight);
+    generateInputCluster(inputElem, 40, 0, false);
+
+    const generateOutputCluster = this.d3Service.newGenerateCluster(outputData, clusterWidth, svgHeight);
+    generateOutputCluster(outputElem, svgWidth / 2 + 160, 0, true);
   
     this.d3Service.updateMappingsEvent.subscribe((mappings: SerializableMapping[]) => {
       this.mapping.emit(mappings);
