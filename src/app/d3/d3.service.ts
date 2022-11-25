@@ -110,6 +110,7 @@ export class D3Service {
     const root = d3.hierarchy(data);
     const clusterLayout = d3.cluster<DataNode>()
       .size([clusterHeight, clusterWidth]);
+    const clusterId = Date.now().toString(16).slice(-6);
 
     root.descendants().forEach((d: HierarchyNodeExtra<DataNode>, i) => {
       d._id = i;
@@ -137,10 +138,9 @@ export class D3Service {
         const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
           .selectAll<SVGCircleElement, unknown>('circle.node')
           .data(nodes)
-          .join<SVGCircleElement>('circle')
+          /* .join<SVGCircleElement>('circle')
           .classed('node', true)
-          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
-          .attr('cy', (d) => { return d.x + offsetHeight; })
+          .attr('id', (d: HierarchyPointNodeExtra<DataNode>) => `${clusterId}-${d._id}`)
           .attr('r', 4)
           .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
             if (d.children) {
@@ -153,8 +153,43 @@ export class D3Service {
             }
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
           })
-
+          .transition()
+          .duration(500)
+          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
+          .attr('cy', (d) => { return d.x + offsetHeight; }) */
+          
         // TODO make nodeElems g elements, enter and append text & circle elements instead
+
+        const nodeElemsEnter = nodeElems.enter().append('g')
+          .classed('node', true)
+          .attr('id', (d: HierarchyPointNodeExtra<DataNode>) => `${clusterId}-${d._id}`)
+          .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
+            if (d.children) {
+              d.children = undefined;
+              d.parent!.children = d.parent?._children;
+            } else {
+              d.children = d._children;
+              console.log(d.parent?.children?.filter((child) => child._id == d._id))
+              d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
+            }
+            update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
+          })
+
+        nodeElemsEnter.append('circle')
+          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
+          .attr('cy', (d) => { return d.x + offsetHeight; })
+          .attr('r', 4)
+
+        nodeElemsEnter.append('text')
+          .text((d) => `${d.data.key}: ${d.data.type}`)
+          .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
+          .attr('y', (d) => d.x + offsetHeight)
+
+        nodeElems.merge(nodeElemsEnter).transition().duration(500)
+          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
+          .attr('cy', (d) => { return d.x + offsetHeight; })
+
+        nodeElems.exit().remove();
 
         this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
           .selectAll('path.link')
