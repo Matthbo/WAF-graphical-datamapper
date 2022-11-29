@@ -136,7 +136,7 @@ export class D3Service {
         const link = d3.link(d3.curveBumpX);
 
         const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
-          .selectAll<SVGCircleElement, unknown>('circle.node')
+          .selectAll<SVGGElement, unknown>('g')
           .data(nodes)
           /* .join<SVGCircleElement>('circle')
           .classed('node', true)
@@ -166,28 +166,38 @@ export class D3Service {
           .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
             if (d.children) {
               d.children = undefined;
-              d.parent!.children = d.parent?._children;
+              // d.parent!.children = d.parent?._children;
             } else {
               d.children = d._children;
-              console.log(d.parent?.children?.filter((child) => child._id == d._id))
-              d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
+              // console.log(d.parent?.children?.filter((child) => child._id == d._id))
+              // d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
             }
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
           })
 
         nodeElemsEnter.append('circle')
-          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
-          .attr('cy', (d) => { return d.x + offsetHeight; })
-          .attr('r', 4)
+          .attr('cx', (d) => { return !invertAxis ? (node as HierarchyPointNodeExtra<DataNode>).y + offsetWidth : clusterWidth - (node as HierarchyPointNodeExtra<DataNode>).y + offsetWidth })
+          .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x + offsetHeight; })
+          .attr('r', 3)
 
         nodeElemsEnter.append('text')
           .text((d) => `${d.data.key}: ${d.data.type}`)
           .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
           .attr('y', (d) => d.x + offsetHeight)
 
-        nodeElems.merge(nodeElemsEnter).transition().duration(500)
+        // nodeElems.merge(nodeElemsEnter)/* .transition().duration(500) */
+        //   .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
+        //   .attr('cy', (d) => { return d.x + offsetHeight; })
+        const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(500)
+        console.log(nodeElemsUpdate)
+
+        nodeElemsUpdate.select('circle')
           .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
-          .attr('cy', (d) => { return d.x + offsetHeight; })
+          .attr('cy', (d) => { return d.x + offsetHeight; });
+
+        nodeElemsUpdate.select('text')
+          .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
+          .attr('y', (d) => d.x + offsetHeight);
 
         nodeElems.exit().remove();
 
@@ -205,7 +215,6 @@ export class D3Service {
               target: [clusterWidth - d.target.y + offsetWidth, d.target.x + offsetHeight]
             })
           );
-
       }
     }
 
