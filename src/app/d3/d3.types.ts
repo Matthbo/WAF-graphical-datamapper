@@ -11,6 +11,8 @@ export type HierarchyNodeExtra<T> = HierarchyNode<T> & {
 export type HierarchyPointNodeExtra<T> = HierarchyPointNode<T> & {
     _id?: number | string;
     _children?: HierarchyPointNodeExtra<T>[];
+    x0?: number;
+    y0?: number;
 };
 
 export type DataNode = {

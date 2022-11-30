@@ -102,10 +102,8 @@ export class D3Service {
       .attr('transform', (d) => !invertAxis ? `translate(-10, 4)` : `translate(10, 4)`);
   }
 
-  // TODO new function to update cluster, also used on creation instead of generateCluster
   // https://observablehq.com/@d3/collapsible-tree
   newGenerateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
-    //TODO find out how to update positions/coordinates
 
     const root = d3.hierarchy(data);
     const clusterLayout = d3.cluster<DataNode>()
@@ -121,11 +119,12 @@ export class D3Service {
     console.log("hierarchy", root);
 
     // node = clicked node
-    const update = (node: HierarchyNodeExtra<DataNode>) => {
-      // const nodes = node.descendants(); //.reverse();
-      // const links = node.links();
-      // const parent = node.parent;
-      console.log("update",root);
+    const update = (node: HierarchyNodeExtra<DataNode> | HierarchyPointNodeExtra<DataNode>) => {
+      if (node.hasOwnProperty("x")) {
+        const nodePoint = node as HierarchyPointNodeExtra<DataNode>;
+        nodePoint.x0 = nodePoint.x;
+        nodePoint.y0 = nodePoint.y;
+      }
 
       const rootNode = clusterLayout(root);
 
@@ -137,75 +136,56 @@ export class D3Service {
 
         const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
           .selectAll<SVGGElement, unknown>('g')
-          .data(nodes)
-          /* .join<SVGCircleElement>('circle')
-          .classed('node', true)
-          .attr('id', (d: HierarchyPointNodeExtra<DataNode>) => `${clusterId}-${d._id}`)
-          .attr('r', 4)
-          .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
-            if (d.children) {
-              d.children = undefined;
-              d.parent!.children = d.parent?._children;
-            } else {
-              d.children = d._children;
-              console.log(d.parent?.children?.filter((child) => child._id == d._id))
-              d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
-            }
-            update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
-          })
-          .transition()
-          .duration(500)
-          .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
-          .attr('cy', (d) => { return d.x + offsetHeight; }) */
-          
-        // TODO make nodeElems g elements, enter and append text & circle elements instead
+          .data(nodes);          
 
         const nodeElemsEnter = nodeElems.enter().append('g')
           .classed('node', true)
           .attr('id', (d: HierarchyPointNodeExtra<DataNode>) => `${clusterId}-${d._id}`)
           .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
-            if (d.children) {
-              d.children = undefined;
-              // d.parent!.children = d.parent?._children;
-            } else {
-              d.children = d._children;
-              // console.log(d.parent?.children?.filter((child) => child._id == d._id))
-              // d.parent!.children = d.parent?.children?.filter((child) => child._id == d._id);
-            }
+            d.children = d.children ? undefined : d._children;
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
           })
 
         nodeElemsEnter.append('circle')
-          .attr('cx', (d) => { return !invertAxis ? (node as HierarchyPointNodeExtra<DataNode>).y + offsetWidth : clusterWidth - (node as HierarchyPointNodeExtra<DataNode>).y + offsetWidth })
-          .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x + offsetHeight; })
-          .attr('r', 3)
+          .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
+          .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
+          .attr('r', 3);
 
         nodeElemsEnter.append('text')
           .text((d) => `${d.data.key}: ${d.data.type}`)
-          .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
-          .attr('y', (d) => d.x + offsetHeight)
+          .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
+          .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
 
-        // nodeElems.merge(nodeElemsEnter)/* .transition().duration(500) */
-        //   .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
-        //   .attr('cy', (d) => { return d.x + offsetHeight; })
-        const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(500)
-        console.log(nodeElemsUpdate)
-
+        const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(500);
         nodeElemsUpdate.select('circle')
           .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
           .attr('cy', (d) => { return d.x + offsetHeight; });
-
         nodeElemsUpdate.select('text')
           .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
           .attr('y', (d) => d.x + offsetHeight);
 
-        nodeElems.exit().remove();
+        const nodeElemsRemove = nodeElems.exit().transition().duration(500).remove();
+        nodeElemsRemove.select('circle')
+          .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
+          .attr('cy', (d) => { return ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight; });
+        nodeElemsRemove.select('text')
+          .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
+          .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x || 0 + offsetHeight; })
+          
 
-        this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
-          .selectAll('path.link')
-          .data(links)
-          .join('path')
+        const nodePaths = this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
+          .selectAll<SVGPathElement, unknown>('path.link')
+          .data(links);
+
+        const nodePathsEnter = nodePaths.enter().append('path')
           .classed('link', true)
+          .attr('d', (d) => {
+            const oPos: [number, number] = [((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x0 || 0) + offsetHeight];
+            const invertOPos: [number, number] = [clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x0 || 0) + offsetHeight]
+            return !invertAxis ? link({ source: oPos, target: oPos }) : link({ source: invertOPos, target: invertOPos });
+          });
+
+        const nodePathsUpdate = nodePaths.merge(nodePathsEnter).transition().duration(500)
           .attr('d', (d) =>
             !invertAxis ? link({
               source: [d.source.y + offsetWidth, d.source.x + offsetHeight],
@@ -215,6 +195,13 @@ export class D3Service {
               target: [clusterWidth - d.target.y + offsetWidth, d.target.x + offsetHeight]
             })
           );
+
+        const nodePathsRemove = nodePaths.exit().transition().duration(500).remove();
+        nodePathsRemove.attr('d', (d) => {
+          const oPos: [number, number] = [((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight];
+          const invertOPos: [number, number] = [clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight]
+          return !invertAxis ? link({ source: oPos, target: oPos }) : link({ source: invertOPos, target: invertOPos });
+        });
       }
     }
 
