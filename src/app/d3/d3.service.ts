@@ -1,7 +1,8 @@
 import { EventEmitter, Injectable } from '@angular/core';
+import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
-import { SerializableMapping, DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra } from './d3.types';
+import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra } from './d3.types';
 
 @Injectable({
   providedIn: 'root'
@@ -9,10 +10,17 @@ import { SerializableMapping, DataNode, HierarchyNodeExtra, HierarchyPointNodeEx
 export class D3Service {
 
   private _mappings: SerializableMapping[] = [];
-
   public updateMappingsEvent = new EventEmitter<SerializableMapping[]>();
 
+  iconPlus = faPlus;
+  iconMinus = faMinus;
+
   constructor() { }
+
+  test(){
+    const path = this.iconPlus.icon[4];
+    console.log(path)
+  }
 
   getSelection<GElement extends BaseType, OldDatum>(element: GElement | string) {
     // check to make typescript happy
@@ -116,10 +124,9 @@ export class D3Service {
       if(d.depth > 0) d.children = undefined;
     })
 
-    console.log("hierarchy", root);
-
     // node = clicked node
     const update = (node: HierarchyNodeExtra<DataNode> | HierarchyPointNodeExtra<DataNode>) => {
+
       if (node.hasOwnProperty("x")) {
         const nodePoint = node as HierarchyPointNodeExtra<DataNode>;
         nodePoint.x0 = nodePoint.x;
@@ -136,15 +143,18 @@ export class D3Service {
 
         const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
           .selectAll<SVGGElement, unknown>('g')
-          .data(nodes);          
+          .data(nodes);
 
         const nodeElemsEnter = nodeElems.enter().append('g')
           .classed('node', true)
           .attr('id', (d: HierarchyPointNodeExtra<DataNode>) => `${clusterId}-${d._id}`)
           .on('click', (event, d: HierarchyPointNodeExtra<DataNode>) => {
             d.children = d.children ? undefined : d._children;
+            console.log(`CLICK ${d.data.key}`, d.children);
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
           })
+
+        // console.log("enter nodes", nodeElemsEnter.nodes());
 
         nodeElemsEnter.append('circle')
           .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
@@ -156,11 +166,15 @@ export class D3Service {
           .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
           .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
 
+        nodeElemsEnter.append('fa-icon')
+          .text(d => d.children ? '-' : '+')
+
         const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(500);
         nodeElemsUpdate.select('circle')
           .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
           .attr('cy', (d) => { return d.x + offsetHeight; });
         nodeElemsUpdate.select('text')
+          .text((d) => `${d.data.key}: ${d.data.type}`)
           .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
           .attr('y', (d) => d.x + offsetHeight);
 
@@ -172,7 +186,6 @@ export class D3Service {
           .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
           .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x || 0 + offsetHeight; })
           
-
         const nodePaths = this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
           .selectAll<SVGPathElement, unknown>('path.link')
           .data(links);
@@ -185,7 +198,7 @@ export class D3Service {
             return !invertAxis ? link({ source: oPos, target: oPos }) : link({ source: invertOPos, target: invertOPos });
           });
 
-        const nodePathsUpdate = nodePaths.merge(nodePathsEnter).transition().duration(500)
+        nodePaths.merge(nodePathsEnter).transition().duration(500)
           .attr('d', (d) =>
             !invertAxis ? link({
               source: [d.source.y + offsetWidth, d.source.x + offsetHeight],

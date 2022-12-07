@@ -2,7 +2,6 @@ import { HierarchyNode, HierarchyPointNode } from './d3-imports';
 
 export type AnyObject = { [index: string]: any };
 
-
 export type HierarchyNodeExtra<T> = HierarchyNode<T> & {
     _id?: number | string;
     _children?: HierarchyNodeExtra<T>[];
@@ -28,14 +27,3 @@ export type DataNode = {
         value: any;
     }
 )
-
-export type SerializableNodeMapInfo = {
-    parentPath: string;
-    key: string;
-    type: string;
-}
-
-export type SerializableMapping = {
-    sourceNode: SerializableNodeMapInfo;
-    targetNode: SerializableNodeMapInfo;
-}

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Mapping, SerializableMapping } from 'src/app/jsplumb/jsplumb.types';
+
 
 @Component({
   selector: 'app-d3',
@@ -18,6 +18,13 @@ export class D3Component {
     obj: {
       name: "recursive",
       value: "input 2"
+    },
+    obj2: {
+      flag: true,
+      reason: ""
+    },
+    obj3: {
+      eekum: "bokum"
     }
   }
 
