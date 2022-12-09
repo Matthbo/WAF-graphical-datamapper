@@ -7,7 +7,9 @@ export class MappingService {
 
   constructor() { }
 
-  // TODO mappings crud / helpers
+  // TODO mappable to mapping fn
 
-  // maybe TODO mapping manager instance class?
+  // TODO mappings crud / helpers
+  // TODO mapping file generator
+
 }

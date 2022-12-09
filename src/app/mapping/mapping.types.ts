@@ -1,3 +1,5 @@
+import { Mappable } from "../d3/d3.types";
+
 // @deprecated
 export type SerializableNodeMapInfo = {
     parentPath: string;
@@ -21,8 +23,8 @@ export type MappingTarget = {
 export type MappingSource = {
     element: string; // node key
     path: string;
-    condition?: null; // TODO condition type? predefined condition templates?
-    transformation?: null; // TODO transformation type? predefined transformation templates?
+    condition?: null; // TODO condition type? predefined condition templates? editable text made for xslt?
+    transformation?: null; // TODO transformation type? xpath format? editable text made for xslt?
 }
 
 export type Mapping = {
@@ -30,3 +32,5 @@ export type Mapping = {
     source: MappingSource;
     children?: Mapping[];
 }
+
+export type MappableToMappingFn = (mappable: Mappable) => Mapping;

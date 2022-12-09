@@ -27,3 +27,10 @@ export type DataNode = {
         value: any;
     }
 )
+
+export type Mappable = {
+    source: HierarchyNode<DataNode>
+    target: HierarchyNode<DataNode>
+    condition?: null; // TODO condition type? predefined condition templates?
+    transformation?: null; // TODO transformation type? predefined transformation templates?
+}

@@ -2,15 +2,15 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
-import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra } from './d3.types';
+import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, Mappable } from './d3.types';
 
 @Injectable({
   providedIn: 'root'
 })
 export class D3Service {
 
-  private _mappings: SerializableMapping[] = [];
-  public updateMappingsEvent = new EventEmitter<SerializableMapping[]>();
+  private _mappings: Mappable[] = [];
+  public updateMappingsEvent = new EventEmitter<Mappable[]>();
 
   iconPlus = faPlus;
   iconMinus = faMinus;
@@ -329,17 +329,11 @@ export class D3Service {
       return `${getPath(node.parent)}/${node.parent.data.key}`;
     }
 
-    const newMapping: SerializableMapping = {
-      sourceNode: {
-        parentPath: getPath(source),
-        key: source.data.key,
-        type: source.data.type
-      },
-      targetNode: {
-        parentPath: getPath(target),
-        key: target.data.key,
-        type: target.data.type
-      }
+    const newMapping: Mappable = {
+      source,
+      target,
+      condition: null,
+      transformation: null
     }
 
     this._mappings.push(newMapping);
