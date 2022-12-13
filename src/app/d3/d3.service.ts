@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faMinus, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
 import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, Mappable } from './d3.types';
@@ -17,9 +17,10 @@ export class D3Service {
 
   constructor() { }
 
-  test(){
-    const path = this.iconPlus.icon[4];
-    console.log(path)
+  test(icon: IconDefinition){
+    const name = icon.iconName;
+    const path = icon.icon[4];
+    console.log(name, path)
   }
 
   getSelection<GElement extends BaseType, OldDatum>(element: GElement | string) {
@@ -112,7 +113,7 @@ export class D3Service {
 
   // https://observablehq.com/@d3/collapsible-tree
   newGenerateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
-
+    const animDuration = 300;
     const root = d3.hierarchy(data);
     const clusterLayout = d3.cluster<DataNode>()
       .size([clusterHeight, clusterWidth]);
@@ -152,11 +153,10 @@ export class D3Service {
             d.children = d.children ? undefined : d._children;
             console.log(`CLICK ${d.data.key}`, d.children);
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
-          })
-
-        // console.log("enter nodes", nodeElemsEnter.nodes());
+          });
 
         nodeElemsEnter.append('circle')
+          .classed('has-children', (d: HierarchyPointNodeExtra<DataNode>) => d._children ? true : false)
           .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
           .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
           .attr('r', 3);
@@ -166,19 +166,18 @@ export class D3Service {
           .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
           .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
 
-        nodeElemsEnter.append('fa-icon')
-          .text(d => d.children ? '-' : '+')
-
-        const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(500);
+        const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(animDuration);
         nodeElemsUpdate.select('circle')
           .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
           .attr('cy', (d) => { return d.x + offsetHeight; });
         nodeElemsUpdate.select('text')
           .text((d) => `${d.data.key}: ${d.data.type}`)
           .attr('x', (d) => !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth)
-          .attr('y', (d) => d.x + offsetHeight);
+          .attr('y', (d) => d.x + offsetHeight)
+          .attr('text-anchor', !invertAxis ? 'end' : 'start')
+          .attr('transform', (d) => !invertAxis ? `translate(-10, 3.5)` : `translate(10, 3.5)`);
 
-        const nodeElemsRemove = nodeElems.exit().transition().duration(500).remove();
+        const nodeElemsRemove = nodeElems.exit().transition().duration(animDuration).remove();
         nodeElemsRemove.select('circle')
           .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
           .attr('cy', (d) => { return ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight; });
@@ -198,7 +197,7 @@ export class D3Service {
             return !invertAxis ? link({ source: oPos, target: oPos }) : link({ source: invertOPos, target: invertOPos });
           });
 
-        nodePaths.merge(nodePathsEnter).transition().duration(500)
+        nodePaths.merge(nodePathsEnter).transition().duration(animDuration)
           .attr('d', (d) =>
             !invertAxis ? link({
               source: [d.source.y + offsetWidth, d.source.x + offsetHeight],
@@ -209,7 +208,7 @@ export class D3Service {
             })
           );
 
-        const nodePathsRemove = nodePaths.exit().transition().duration(500).remove();
+        const nodePathsRemove = nodePaths.exit().transition().duration(animDuration).remove();
         nodePathsRemove.attr('d', (d) => {
           const oPos: [number, number] = [((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight];
           const invertOPos: [number, number] = [clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth, ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight]
@@ -321,22 +320,12 @@ export class D3Service {
   }
 
   private addMapping(source: d3.HierarchyPointNode<DataNode>, target: d3.HierarchyPointNode<DataNode>){
-    function getPath(node: d3.HierarchyPointNode<DataNode>): string{
-      if (node.parent == null || node.parent.depth == 0){
-        return node.height == 0 ? "/" : "";
-      }
-
-      return `${getPath(node.parent)}/${node.parent.data.key}`;
-    }
-
-    const newMapping: Mappable = {
+    this._mappings.push({
       source,
       target,
       condition: null,
       transformation: null
-    }
-
-    this._mappings.push(newMapping);
+    });
     this.updateMappingsEvent.emit(this._mappings);
   }
 

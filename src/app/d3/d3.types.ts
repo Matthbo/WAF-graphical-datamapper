@@ -34,3 +34,10 @@ export type Mappable = {
     condition?: null; // TODO condition type? predefined condition templates?
     transformation?: null; // TODO transformation type? predefined transformation templates?
 }
+
+export type MappableDisplay = {
+    source: DataNode & { path: string };
+    target: DataNode & { path: string };
+    condition: string;
+    transformation: string;
+}

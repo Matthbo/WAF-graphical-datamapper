@@ -15,14 +15,14 @@
       </thead>
       <tbody>
         <tr *ngFor="let mapping of displayMappings">
-          <td>{{mapping.sourceNode.key}}</td>
-          <td>{{mapping.sourceNode.type}}</td>
-          <td>{{mapping.sourceNode.parentPath}}</td>
-          <td>TODO</td>
-          <td>TODO</td>
-          <td>{{mapping.targetNode.key}}</td>
-          <td>{{mapping.targetNode.type}}</td>
-          <td>{{mapping.targetNode.parentPath}}</td>
+          <td>{{mapping.source.key}}</td>
+          <td>{{mapping.source.type}}</td>
+          <td>{{mapping.source.path}}</td>
+          <td>{{mapping.condition}}</td>
+          <td>{{mapping.transformation}}</td>
+          <td>{{mapping.target.key}}</td>
+          <td>{{mapping.target.type}}</td>
+          <td>{{mapping.target.path}}</td>
         </tr>
     </table>
   </div>

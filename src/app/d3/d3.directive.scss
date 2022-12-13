@@ -3,24 +3,34 @@ svg[appD3] {
   min-height: 50px;
 
   .node {
-    fill: steelblue;
-    stroke: none;
+    circle {
+      fill: #999;
+      stroke: #999;
+
+      &.has-children {
+        fill: #666;
+      }
+    }
+    
+    text {
+      font-size: 14px;
+    }
   }
 
   .link {
     fill: none;
-    stroke: #ccc;
+    stroke: #999;
     stroke-width: 1px;
   }
 
   circle.dragging {
-    fill: #b7b7b7;
+    fill: #4c4c4c;
   }
   
   path.dragging,
   g.connections path {
     fill: none;
-    stroke: #b7b7b7;
+    stroke: #4c4c4c;
     stroke-width: 2px;
   }
 

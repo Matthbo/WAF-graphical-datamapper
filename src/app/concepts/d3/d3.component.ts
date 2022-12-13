@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HierarchyNode, HierarchyPointNode } from 'd3-hierarchy';
-import { DataNode, Mappable } from 'src/app/d3/d3.types';
+import { DataNode, Mappable, MappableDisplay } from 'src/app/d3/d3.types';
+import { MappingService } from 'src/app/mapping/mapping.service';
 import { MappableToMappingFn } from 'src/app/mapping/mapping.types';
 
 
@@ -11,7 +12,7 @@ import { MappableToMappingFn } from 'src/app/mapping/mapping.types';
 })
 export class D3Component {
 
-  public displayMappings: Mappable[] = [];
+  public displayMappings: MappableDisplay[] = [];
 
   public EXAMPLE_INPUT: { [index:string]: any } = {
     name: "example",
@@ -38,34 +39,15 @@ export class D3Component {
     prop4: null
   }
 
-  private mappableToMapping: MappableToMappingFn = (mappables: Mappable) => {
-    function getPath(node: HierarchyNode<DataNode>): string {
-      if (node.parent == null || node.parent.depth == 0) {
-        return node.height == 0 ? "/" : "";
-      }
-
-      return `${getPath(node.parent)}/${node.parent.data.key}`;
-    }
-
-    return {
-      target: {
-        element: mappables.target.data.key,
-        type: mappables.target.data.type,
-        repeating: false, // TODO
-        required: false // TODO
-      },
-      source: {
-        element: mappables.source.data.key,
-        path: getPath(mappables.source),
-        condition: null,
-        transformation: null
-      },
-      
-    }
-  }
+  constructor(private mappingService: MappingService) { }
 
   updateMappings(mappings: Mappable[]) {
-    this.displayMappings = mappings;
+    this.displayMappings = mappings.map(mappable => ({
+      source: { ...mappable.source.data, path: this.mappingService.getPath(mappable.source) },
+      target: { ...mappable.target.data, path: this.mappingService.getPath(mappable.target) },
+      condition: "TODO",
+      transformation: "TODO"
+    }));
   }
 
 }

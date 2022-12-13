@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { AfterViewInit, Directive, ElementRef, EventEmitter, Inject, Input, OnDestroy, OnInit, Output, Renderer2 } from '@angular/core';
 import { D3Service } from './d3.service';
-import { AnyObject, SerializableMapping } from './d3.types';
+import { AnyObject, Mappable } from './d3.types';
 
 @Directive({
   selector: 'svg[appD3]'
@@ -14,7 +14,7 @@ export class D3Directive implements AfterViewInit, OnDestroy {
   output: AnyObject = {};
 
   @Output()
-  mapping = new EventEmitter<SerializableMapping[]>();
+  mapping = new EventEmitter<Mappable[]>();
 
   constructor(
     private container: ElementRef<SVGElement>,
@@ -64,8 +64,10 @@ export class D3Directive implements AfterViewInit, OnDestroy {
 
     const generateOutputCluster = this.d3Service.newGenerateCluster(outputData, clusterWidth, svgHeight);
     generateOutputCluster(outputElem, svgWidth / 2 + 160, 0, true);
+
+    this.d3Service.test(this.d3Service.iconPlus);
   
-    this.d3Service.updateMappingsEvent.subscribe((mappings: SerializableMapping[]) => {
+    this.d3Service.updateMappingsEvent.subscribe((mappings: Mappable[]) => {
       this.mapping.emit(mappings);
     });
   }
