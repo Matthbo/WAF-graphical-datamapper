@@ -141,6 +141,13 @@ export class D3Service {
 
       return (containerElem: SVGGElement | string, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) => {
         const link = d3.link(d3.curveBumpX);
+        const svgElem = typeof containerElem === 'string' ?
+          d3.select<SVGSVGElement, unknown>(document.querySelector<SVGGElement>(containerElem)!.parentElement as Element as SVGSVGElement) :
+          d3.select<SVGSVGElement, unknown>(containerElem.parentElement as Element as SVGSVGElement);
+
+        this.getSelection(containerElem)
+          .attr('offsetWidth', offsetWidth)
+          .attr('offsetHeight', offsetHeight);
 
         const nodeElems = this.getChildSelection<SVGGElement, unknown>(containerElem, '.nodes')
           .selectAll<SVGGElement, unknown>('g')
@@ -159,7 +166,12 @@ export class D3Service {
           .classed('has-children', (d: HierarchyPointNodeExtra<DataNode>) => d._children ? true : false)
           .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
           .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
-          .attr('r', 3);
+          .attr('r', 3)
+          .call(d3.drag<SVGCircleElement, HierarchyPointNode<DataNode>>()
+            .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link))
+            .on("drag", this.handleSVGDragging(svgElem, link))
+            .on("end", this.handleSVGDragStop(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link, this.addMapping.bind(this)))
+          )
 
         nodeElemsEnter.append('text')
           .text((d) => `${d.data.key}: ${d.data.type}`)
@@ -167,7 +179,7 @@ export class D3Service {
           .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
 
         const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(animDuration);
-        nodeElemsUpdate.select('circle')
+        nodeElemsUpdate.select<SVGCircleElement>('circle')
           .attr('cx', (d) => { return !invertAxis ? d.y + offsetWidth : clusterWidth - d.y + offsetWidth })
           .attr('cy', (d) => { return d.x + offsetHeight; });
         nodeElemsUpdate.select('text')
