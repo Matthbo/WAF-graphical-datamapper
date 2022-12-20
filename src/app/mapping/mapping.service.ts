@@ -12,10 +12,14 @@ export class MappingService {
 
   getPath(node: HierarchyNode<DataNode>): string {
     if (node.parent == null || node.parent.depth == 0) {
-      return node.height == 0 ? "/" : "";
+      // return node.height <= 1 ? "/" : "";
+      return "/";
     }
 
-    return `${this.getPath(node.parent)}/${node.parent.data.key}`;
+    const prevPath = this.getPath(node.parent);
+
+    if(prevPath == "/") return prevPath + node.parent.data.key;
+    return `${prevPath}/${node.parent.data.key}`;
   }
 
   mappableToMapping: MappableToMappingFn = (mappables: Mappable) => {

@@ -48,6 +48,8 @@ export class D3Component {
       condition: "TODO",
       transformation: "TODO"
     }));
+    console.log([...mappings]);
+    console.log(this.displayMappings);
   }
 
 }

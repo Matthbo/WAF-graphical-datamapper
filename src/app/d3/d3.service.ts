@@ -57,7 +57,7 @@ export class D3Service {
     }
   }
 
-  createCluster(data: DataNode, width: number, height: number) {
+  /* createCluster(data: DataNode, width: number, height: number) {
     const rootNode = d3.hierarchy(data);
     const clusterLayout = d3.cluster<DataNode>()
       .size([height, width]);
@@ -109,7 +109,7 @@ export class D3Service {
       .text((d) => `${d.data.key}: ${d.data.type}`)
       .attr('text-anchor', !invertAxis ? 'end' : 'start')
       .attr('transform', (d) => !invertAxis ? `translate(-10, 4)` : `translate(10, 4)`);
-  }
+  } */
 
   // https://observablehq.com/@d3/collapsible-tree
   newGenerateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
@@ -162,10 +162,13 @@ export class D3Service {
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
           });
 
+        const nodeElemsPosX = (!invertAxis ? 0 : clusterWidth) - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth;
+        const nodeElemsPosY = (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight;
+
         nodeElemsEnter.append('circle')
           .classed('has-children', (d: HierarchyPointNodeExtra<DataNode>) => d._children ? true : false)
-          .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
-          .attr('cy', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
+          .attr('cx', (d) => { return nodeElemsPosX })
+          .attr('cy', (d) => { return nodeElemsPosY })
           .attr('r', 3)
           .call(d3.drag<SVGCircleElement, HierarchyPointNode<DataNode>>()
             .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link))
@@ -175,8 +178,8 @@ export class D3Service {
 
         nodeElemsEnter.append('text')
           .text((d) => `${d.data.key}: ${d.data.type}`)
-          .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y0 || 0) + offsetWidth })
-          .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x0 || 0 + offsetHeight; })
+          .attr('x', (d) => { return nodeElemsPosX })
+          .attr('y', (d) => { return nodeElemsPosY })
 
         const nodeElemsUpdate = nodeElems.merge(nodeElemsEnter).transition().duration(animDuration);
         nodeElemsUpdate.select<SVGCircleElement>('circle')
@@ -189,13 +192,16 @@ export class D3Service {
           .attr('text-anchor', !invertAxis ? 'end' : 'start')
           .attr('transform', (d) => !invertAxis ? `translate(-10, 3.5)` : `translate(10, 3.5)`);
 
+        const nodeElemsRemovePosX = (!invertAxis ? 0 : clusterWidth) - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth;
+        const nodeElemsRemovePosY = ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight;
+
         const nodeElemsRemove = nodeElems.exit().transition().duration(animDuration).remove();
         nodeElemsRemove.select('circle')
-          .attr('cx', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
-          .attr('cy', (d) => { return ((node as HierarchyPointNodeExtra<DataNode>).x || 0) + offsetHeight; });
+          .attr('cx', (d) => { return nodeElemsRemovePosX })
+          .attr('cy', (d) => { return nodeElemsRemovePosY });
         nodeElemsRemove.select('text')
-          .attr('x', (d) => { return !invertAxis ? ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth : clusterWidth - ((node as HierarchyPointNodeExtra<DataNode>).y || 0) + offsetWidth })
-          .attr('y', (d) => { return (node as HierarchyPointNodeExtra<DataNode>).x || 0 + offsetHeight; })
+          .attr('x', (d) => { return nodeElemsRemovePosX })
+          .attr('y', (d) => { return nodeElemsRemovePosY })
           
         const nodePaths = this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
           .selectAll<SVGPathElement, unknown>('path.link')
@@ -232,7 +238,7 @@ export class D3Service {
     return update(root);
   }
 
-  generateCluster(cluster: d3.HierarchyPointNode<DataNode>, containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) {
+  /* generateCluster(cluster: d3.HierarchyPointNode<DataNode>, containerElem: SVGGElement | string, clusterWidth: number, offsetWidth: number = 0, offsetHeight: number = 0, invertAxis: boolean = false) {
     const svgElem = typeof containerElem === 'string' ?
       d3.select<SVGSVGElement, unknown>(document.querySelector<SVGGElement>(containerElem)!.parentElement as Element as SVGSVGElement) :
       d3.select<SVGSVGElement, unknown>(containerElem.parentElement as Element as SVGSVGElement);
@@ -244,7 +250,7 @@ export class D3Service {
     this.generateClusterNodes(cluster.descendants(), containerElem, svgElem, clusterWidth, offsetWidth, offsetHeight, invertAxis);
     this.generateClusterLinks(cluster.links(), containerElem, clusterWidth, offsetWidth, offsetHeight, invertAxis);
     this.generateClusterOverlay(cluster.descendants(), containerElem, clusterWidth, offsetWidth, offsetHeight, invertAxis);
-  }
+  } */
 
   private handleSVGDragStart(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
     return function <T extends Element>(this: T, event: D3DragEvent<T, unknown, HierarchyPointNode<DataNode>>, d: HierarchyPointNode<DataNode>) {
@@ -306,9 +312,9 @@ export class D3Service {
       svgSelection.select('circle.dragging').remove();
       svgSelection.select('path.dragging').remove();
 
-      if (targetNode != null) {
+      if (targetNode != null && d !== targetNode && d.data.id !== targetNode.data.id) {
         const [targetOffsetW, targetOffsetH] = ((selection: d3.Selection<Element, HierarchyPointNode<DataNode>, null, undefined>) => {
-          const offsetElem = d3.select(selection.node()!.parentElement!.parentElement);
+          const offsetElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
           return [offsetElem.attr("offsetWidth"), offsetElem.attr("offsetHeight")];
         })(targetElem);
 
