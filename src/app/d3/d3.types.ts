@@ -1,4 +1,4 @@
-import { HierarchyNode, HierarchyPointNode } from './d3-imports';
+import { HierarchyNode, HierarchyPointNode, Selection } from './d3-imports';
 
 export type AnyObject = { [index: string]: any };
 
@@ -27,6 +27,11 @@ export type DataNode = {
         value: any;
     }
 )
+
+export type connection = {
+    source: Selection<HierarchyNode<DataNode>>;
+    target: HierarchyNode<DataNode>;
+}
 
 export type Mappable = {
     source: HierarchyNode<DataNode>

@@ -12,7 +12,6 @@ export class MappingService {
 
   getPath(node: HierarchyNode<DataNode>): string {
     if (node.parent == null || node.parent.depth == 0) {
-      // return node.height <= 1 ? "/" : "";
       return "/";
     }
 
