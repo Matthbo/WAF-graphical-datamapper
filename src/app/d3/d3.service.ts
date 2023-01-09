@@ -2,7 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { faPlus, faMinus, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
-import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, Mappable } from './d3.types';
+import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, HierarchyPointNodeSelection, Mappable } from './d3.types';
 
 @Injectable({
   providedIn: 'root'
@@ -116,6 +116,7 @@ export class D3Service {
             d.children = d.children ? undefined : d._children;
             console.log(`CLICK ${d.data.key}`, d.children);
             update(d)(containerElem, offsetWidth, offsetHeight, invertAxis);
+            this.updateConnections(svgElem, link);
           });
 
         nodeElemsEnter.append('circle')
@@ -182,14 +183,36 @@ export class D3Service {
           const invertOPos: [number, number] = [nodeElemsRemovePosX, nodeElemsRemovePosY]
           return !invertAxis ? link({ source: oPos, target: oPos }) : link({ source: invertOPos, target: invertOPos });
         });
-
-        if(this._mappings.length > 0){
-
-        }
       }
     }
 
     return update(root);
+  }
+
+  // TODO find a way to get cluster widths
+  private updateConnections(/* width: number */, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>){
+    this._mappings.forEach((mapping) => {
+      function getClusterOffset(selection: d3.Selection<Element, HierarchyPointNode<DataNode>, null, undefined>) {
+        const offsetElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
+        return [+offsetElem.attr("offsetWidth"), +offsetElem.attr("offsetHeight")];
+      }
+      const sourceData = mapping.sourceSelection.datum();
+      const targetData = mapping.targetSelection.datum();
+      const [sourceOffsetW, sourceOffsetH] = getClusterOffset(mapping.sourceSelection);
+      const [targetOffsetW, targetOffsetH] = getClusterOffset(mapping.targetSelection);
+
+      const sourceX = sourceData.y + sourceOffsetW;
+      const sourceY = sourceData.x + sourceOffsetH;
+      const targetX = width - targetData.y + targetOffsetW;
+      const targetY = targetData.x + targetOffsetH;
+  
+      svgSelection.select('g.connections')
+        .append('path')
+        .attr('d', link({
+          source: [sourceX, sourceY],
+          target: [targetX, targetY]
+        }));
+    });
   }
 
   private handleSVGDragStart(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
@@ -244,24 +267,22 @@ export class D3Service {
     }
   }
 
-  // TODO check if mappable[] is updated correctly so it can be used to update connection positions
-  private handleSVGDragStop(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, addMappingFn: (s: d3.HierarchyPointNode<DataNode>, t: d3.HierarchyPointNode<DataNode>) => void) {
+  private handleSVGDragStop(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, addMappingFn: (s: HierarchyPointNodeSelection, t: HierarchyPointNodeSelection) => void) {
     return function <T extends Element>(this: T, event: D3DragEvent<T, unknown, HierarchyPointNode<DataNode>>, d: HierarchyPointNode<DataNode>) {
       const mouseEvent = event.sourceEvent as MouseEvent;
-      const targetElem = d3.select<SVGPathElement | Element, HierarchyPointNode<DataNode>>(mouseEvent.target as Element);
-      const targetNode = targetElem.datum();
+      const sourceSelection = d3.select<Element, HierarchyPointNode<DataNode>>(this);
+      const targetSelection = d3.select<Element, HierarchyPointNode<DataNode>>(mouseEvent.target as Element);
+      const targetNode = targetSelection.datum();
       svgSelection.select('circle.dragging').remove();
       svgSelection.select('path.dragging').remove();
-
-      console.log(`this in dragstop`, this);
 
       if (targetNode != null && d !== targetNode && d.data.id !== targetNode.data.id) {
         const [targetOffsetW, targetOffsetH] = ((selection: d3.Selection<Element, HierarchyPointNode<DataNode>, null, undefined>) => {
           const offsetElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
           return [offsetElem.attr("offsetWidth"), offsetElem.attr("offsetHeight")];
-        })(targetElem);
+        })(targetSelection);
 
-        const sourceX = invertAxis ? width - d.y + offsetWidth : d.y + offsetWidth;
+        /* const sourceX = invertAxis ? width - d.y + offsetWidth : d.y + offsetWidth;
         const sourceY = d.x + offsetHeight;
         const targetX = !invertAxis ? width - targetNode.y + (+targetOffsetW) : targetNode.y + (+targetOffsetW);
         const targetY = targetNode.x + (+targetOffsetH);
@@ -271,20 +292,21 @@ export class D3Service {
           .attr('d', link({
             source: [sourceX, sourceY],
             target: [targetX, targetY]
-          }));
+          })); */
 
         const sourceIsInput = d.data.id === "input";
 
-        // TODO make connections array with this, targetElement and more positional info?
-        sourceIsInput ? addMappingFn(d, targetNode) : addMappingFn(targetNode, d);
+        sourceIsInput ? addMappingFn(sourceSelection, targetSelection) : addMappingFn(targetSelection, sourceSelection);
       }
     }
   }
 
-  private addMapping(source: d3.HierarchyPointNode<DataNode>, target: d3.HierarchyPointNode<DataNode>) {
+  private addMapping(sourceSelection: HierarchyPointNodeSelection, targetSelection: HierarchyPointNodeSelection) {
     this._mappings.push({
-      source,
-      target,
+      source: sourceSelection.datum(),
+      sourceSelection,
+      target: targetSelection.datum(),
+      targetSelection,
       condition: null,
       transformation: null
     });

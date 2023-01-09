@@ -28,14 +28,13 @@ export type DataNode = {
     }
 )
 
-export type connection = {
-    source: Selection<HierarchyNode<DataNode>>;
-    target: HierarchyNode<DataNode>;
-}
+export type HierarchyPointNodeSelection = Selection<Element, HierarchyPointNode<DataNode>, null, undefined>
 
 export type Mappable = {
     source: HierarchyNode<DataNode>
+    sourceSelection: HierarchyPointNodeSelection
     target: HierarchyNode<DataNode>
+    targetSelection: HierarchyPointNodeSelection
     condition?: null; // TODO condition type? predefined condition templates?
     transformation?: null; // TODO transformation type? predefined transformation templates?
 }
