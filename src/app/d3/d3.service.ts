@@ -74,7 +74,6 @@ export class D3Service {
 
     // node = clicked node
     const update = (node: HierarchyNodeExtra<DataNode> | HierarchyPointNodeExtra<DataNode>) => {
-
       if (node.hasOwnProperty("x")) {
         const nodePoint = node as HierarchyPointNodeExtra<DataNode>;
         nodePoint.x0 = nodePoint.x;
@@ -93,6 +92,8 @@ export class D3Service {
           d3.select<SVGSVGElement, unknown>(containerElem.parentElement as Element as SVGSVGElement);
 
         this.getSelection(containerElem)
+          .attr('width', clusterWidth)
+          .attr('height', clusterHeight)
           .attr('offsetWidth', offsetWidth)
           .attr('offsetHeight', offsetHeight);
 
@@ -127,7 +128,7 @@ export class D3Service {
           .call(d3.drag<SVGCircleElement, HierarchyPointNode<DataNode>>()
             .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link))
             .on("drag", this.handleSVGDragging(svgElem, link))
-            .on("end", this.handleSVGDragStop(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link, this.addMapping.bind(this)))
+            .on("end", this.handleSVGDragStop(svgElem, link, this.addMapping.bind(this), this.updateConnections.bind(this)))
           );
 
         nodeElemsEnter.append('text')
@@ -146,13 +147,14 @@ export class D3Service {
           .attr('text-anchor', !invertAxis ? 'end' : 'start')
           .attr('transform', (d) => !invertAxis ? `translate(-10, 3.5)` : `translate(10, 3.5)`);
 
-        const nodeElemsRemove = nodeElems.exit().transition().duration(animDuration).remove();
+        const nodeElemsRemove = nodeElems.exit().transition().duration(animDuration)
         nodeElemsRemove.select('circle')
           .attr('cx', (d) => { return nodeElemsRemovePosX })
           .attr('cy', (d) => { return nodeElemsRemovePosY });
         nodeElemsRemove.select('text')
           .attr('x', (d) => { return nodeElemsRemovePosX })
           .attr('y', (d) => { return nodeElemsRemovePosY });
+        nodeElemsRemove.remove().selectAll("*").remove();
 
         const nodePaths = this.getChildSelection<SVGGElement, unknown>(containerElem, '.links')
           .selectAll<SVGPathElement, unknown>('path.link')
@@ -189,30 +191,33 @@ export class D3Service {
     return update(root);
   }
 
-  // TODO find a way to get cluster widths
-  private updateConnections(/* width: number */, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>){
-    this._mappings.forEach((mapping) => {
-      function getClusterOffset(selection: d3.Selection<Element, HierarchyPointNode<DataNode>, null, undefined>) {
-        const offsetElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
-        return [+offsetElem.attr("offsetWidth"), +offsetElem.attr("offsetHeight")];
-      }
-      const sourceData = mapping.sourceSelection.datum();
-      const targetData = mapping.targetSelection.datum();
-      const [sourceOffsetW, sourceOffsetH] = getClusterOffset(mapping.sourceSelection);
-      const [targetOffsetW, targetOffsetH] = getClusterOffset(mapping.targetSelection);
+  private updateConnections(svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>){
+    function getClusterPos(selection: HierarchyPointNodeSelection) {
+      console.log(selection.node(), selection.empty())
+      const clusterElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
+      return [+clusterElem.attr("width"), +clusterElem.attr("offsetWidth"), +clusterElem.attr("offsetHeight")];
+    }
 
-      const sourceX = sourceData.y + sourceOffsetW;
-      const sourceY = sourceData.x + sourceOffsetH;
-      const targetX = width - targetData.y + targetOffsetW;
-      const targetY = targetData.x + targetOffsetH;
-  
-      svgSelection.select('g.connections')
-        .append('path')
-        .attr('d', link({
+    svgSelection.select('g.connections')
+      .selectAll('path')
+      .data(this._mappings)
+      .join('path')
+      .attr('d', (mapping) => {
+        const sourceData = mapping.sourceSelection.datum();
+        const targetData = mapping.targetSelection.datum();
+        const [sourceWidth, sourceOffsetW, sourceOffsetH] = getClusterPos(mapping.sourceSelection);
+        const [targetWidth, targetOffsetW, targetOffsetH] = getClusterPos(mapping.targetSelection);
+
+        const sourceX = sourceData.y + sourceOffsetW;
+        const sourceY = sourceData.x + sourceOffsetH;
+        const targetX = targetWidth - targetData.y + targetOffsetW;
+        const targetY = targetData.x + targetOffsetH;
+
+        return link({
           source: [sourceX, sourceY],
           target: [targetX, targetY]
-        }));
-    });
+        });
+      })
   }
 
   private handleSVGDragStart(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
@@ -267,7 +272,7 @@ export class D3Service {
     }
   }
 
-  private handleSVGDragStop(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, addMappingFn: (s: HierarchyPointNodeSelection, t: HierarchyPointNodeSelection) => void) {
+  private handleSVGDragStop(svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, addMappingFn: (s: HierarchyPointNodeSelection, t: HierarchyPointNodeSelection) => void, updateConnectionsFn: (s: d3.Selection<SVGSVGElement, unknown, null, any>, l: d3.Link<any, d3.DefaultLinkObject, [number, number]>) => void) {
     return function <T extends Element>(this: T, event: D3DragEvent<T, unknown, HierarchyPointNode<DataNode>>, d: HierarchyPointNode<DataNode>) {
       const mouseEvent = event.sourceEvent as MouseEvent;
       const sourceSelection = d3.select<Element, HierarchyPointNode<DataNode>>(this);
@@ -277,26 +282,9 @@ export class D3Service {
       svgSelection.select('path.dragging').remove();
 
       if (targetNode != null && d !== targetNode && d.data.id !== targetNode.data.id) {
-        const [targetOffsetW, targetOffsetH] = ((selection: d3.Selection<Element, HierarchyPointNode<DataNode>, null, undefined>) => {
-          const offsetElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
-          return [offsetElem.attr("offsetWidth"), offsetElem.attr("offsetHeight")];
-        })(targetSelection);
-
-        /* const sourceX = invertAxis ? width - d.y + offsetWidth : d.y + offsetWidth;
-        const sourceY = d.x + offsetHeight;
-        const targetX = !invertAxis ? width - targetNode.y + (+targetOffsetW) : targetNode.y + (+targetOffsetW);
-        const targetY = targetNode.x + (+targetOffsetH);
-
-        svgSelection.select('g.connections')
-          .append('path')
-          .attr('d', link({
-            source: [sourceX, sourceY],
-            target: [targetX, targetY]
-          })); */
-
         const sourceIsInput = d.data.id === "input";
-
         sourceIsInput ? addMappingFn(sourceSelection, targetSelection) : addMappingFn(targetSelection, sourceSelection);
+        updateConnectionsFn(svgSelection, link);
       }
     }
   }
