@@ -202,6 +202,7 @@ export class D3Service {
       .selectAll('path')
       .data(this._mappings)
       .join('path')
+      .transition().duration(300)
       .attr('d', (mapping) => {
         const sourceData = mapping.sourceSelection.datum();
         const targetData = mapping.targetSelection.datum();
