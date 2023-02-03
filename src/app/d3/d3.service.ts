@@ -2,7 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { faPlus, faMinus, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import * as d3 from './d3-imports';
 import { BaseType, D3DragEvent, HierarchyPointNode } from './d3-imports';
-import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, HierarchyPointNodeSelection, Mappable } from './d3.types';
+import { CustomisationOptions, DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, HierarchyPointNodeSelection, Mappable } from './d3.types';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +10,13 @@ import { DataNode, HierarchyNodeExtra, HierarchyPointNodeExtra, HierarchyPointNo
 export class D3Service {
 
   private _mappings: Mappable[] = [];
-  // private _connections: 
   public updateMappingsEvent = new EventEmitter<Mappable[]>();
+  public readonly customisationDefaults: CustomisationOptions = {
+    connectionsColour: "#ca9b00",
+    pathsColour: "#3300cc",
+    nodesColour: "#cc0058"
+  };
+  private _customisationOptions: CustomisationOptions = this.customisationDefaults;
 
   iconPlus = faPlus;
   iconMinus = faMinus;
@@ -22,6 +27,19 @@ export class D3Service {
     const name = icon.iconName;
     const path = icon.icon[4];
     console.log(name, path)
+  }
+
+  setCustomisation(options: CustomisationOptions) {
+    type Entries<T> = {
+      [K in keyof T]: [K, T[K]];
+    }[keyof T][];
+
+    const newOptions: CustomisationOptions = {...this.customisationDefaults};
+    (Object.entries(options) as Entries<CustomisationOptions>).forEach(([key, value]) => {
+      if(value[0] == "#" && value.length > 0 && value.length <= 6)
+        newOptions[key] = value;
+    });
+    this._customisationOptions = newOptions;
   }
 
   getSelection<GElement extends BaseType, OldDatum>(element: GElement | string) {

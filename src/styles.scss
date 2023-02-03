@@ -3,6 +3,23 @@
 @import "app/jsplumb/jsplumb.directive";
 @import "app/d3/d3.directive";
 
+@font-face {
+  font-family: Gilroy;
+  src: url("assets/font/Gilroy Regular.ttf");
+}
+
+@font-face {
+  font-family: Gilroy;
+  src: url("assets/font/Gilroy Bold.ttf");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: Gilroy;
+  src: url("assets/font/Gilroy ExtraBold.ttf");
+  font-weight: 700;
+}
+
 * {
   box-sizing: border-box;
 }

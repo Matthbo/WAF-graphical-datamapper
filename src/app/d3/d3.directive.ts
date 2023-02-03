@@ -1,17 +1,19 @@
 import { DOCUMENT } from '@angular/common';
-import { AfterViewInit, Directive, ElementRef, EventEmitter, Inject, Input, OnDestroy, OnInit, Output, Renderer2 } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, EventEmitter, Inject, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges } from '@angular/core';
 import { D3Service } from './d3.service';
-import { AnyObject, Mappable } from './d3.types';
+import { AnyObject, CustomisationOptions, Mappable } from './d3.types';
 
 @Directive({
   selector: 'svg[appD3]'
 })
-export class D3Directive implements AfterViewInit, OnDestroy {
+export class D3Directive implements AfterViewInit, OnDestroy, OnChanges {
 
   @Input()
   input: AnyObject = {};
   @Input()
   output: AnyObject = {};
+  @Input()
+  customisation: CustomisationOptions = this.d3Service.customisationDefaults;
 
   @Output()
   mapping = new EventEmitter<Mappable[]>();
@@ -74,6 +76,12 @@ export class D3Directive implements AfterViewInit, OnDestroy {
 
   onResize() {
     console.log("resized");
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["customisation"]){
+      this.d3Service.setCustomisation(this.customisation);
+    }
   }
 
   ngOnDestroy(): void {

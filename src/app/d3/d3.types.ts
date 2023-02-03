@@ -45,3 +45,9 @@ export type MappableDisplay = {
     condition: string;
     transformation: string;
 }
+
+export type CustomisationOptions = {
+    pathsColour: string;
+    nodesColour: string;
+    connectionsColour: string;
+}

@@ -3,10 +3,16 @@ nav {
   color: #1e1e1e;
   background-color: #fdc300;
 
-  span.title {
+  .title {
     display: inline-block;
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 28px;
+    margin: 0.5em 0;
+    font-weight: bolder;
+    font-family: Gilroy;
+
+    span {
+      color: #fff;
+    }
   }
 
   ul {
