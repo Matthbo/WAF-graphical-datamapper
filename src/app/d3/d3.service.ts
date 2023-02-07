@@ -13,8 +13,8 @@ export class D3Service {
   public updateMappingsEvent = new EventEmitter<Mappable[]>();
   public readonly customisationDefaults: CustomisationOptions = {
     connectionsColour: "#ca9b00",
-    pathsColour: "#3300cc",
-    nodesColour: "#cc0058"
+    pathsColour: "#33002a",
+    nodesColour: "#ca9b00"
   };
   private _customisationOptions: CustomisationOptions = this.customisationDefaults;
 
@@ -140,11 +140,12 @@ export class D3Service {
 
         nodeElemsEnter.append('circle')
           .classed('has-children', (d: HierarchyPointNodeExtra<DataNode>) => d._children ? true : false)
+          .style('stroke', () => this._customisationOptions.nodesColour)
           .attr('cx', (d) => { return nodeElemsPosX })
           .attr('cy', (d) => { return nodeElemsPosY })
           .attr('r', 3)
           .call(d3.drag<SVGCircleElement, HierarchyPointNode<DataNode>>()
-            .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link))
+            .on("start", this.handleSVGDragStart(clusterWidth, invertAxis, svgElem, offsetWidth, offsetHeight, link, this._customisationOptions.connectionsColour))
             .on("drag", this.handleSVGDragging(svgElem, link))
             .on("end", this.handleSVGDragStop(svgElem, link, this.addMapping.bind(this), this.updateConnections.bind(this)))
           );
@@ -180,6 +181,7 @@ export class D3Service {
 
         const nodePathsEnter = nodePaths.enter().append('path')
           .classed('link', true)
+          .style('stroke', () => this._customisationOptions.pathsColour)
           .attr('d', (d) => {
             const oPos: [number, number] = [nodePointY0, nodePointX0];
             const invertOPos: [number, number] = [nodeElemsPosX, nodeElemsPosY]
@@ -221,6 +223,7 @@ export class D3Service {
       .data(this._mappings)
       .join('path')
       .transition().duration(300)
+      .style('stroke', () => this._customisationOptions.connectionsColour)
       .attr('d', (mapping) => {
         const sourceData = mapping.sourceSelection.datum();
         const targetData = mapping.targetSelection.datum();
@@ -239,7 +242,7 @@ export class D3Service {
       })
   }
 
-  private handleSVGDragStart(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
+  private handleSVGDragStart(width: number, invertAxis: boolean, svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, offsetWidth: number, offsetHeight: number, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>, pathCol: string) {
     return function <T extends Element>(this: T, event: D3DragEvent<T, unknown, HierarchyPointNode<DataNode>>, d: HierarchyPointNode<DataNode>) {
       const sourceX = invertAxis ? width - event.y + offsetWidth : event.y + offsetWidth;
       const sourceY = event.x + offsetHeight;
@@ -262,6 +265,7 @@ export class D3Service {
 
       svgSelection
         .append('path').lower()
+        .style('stroke', () => pathCol)
         .classed('dragging', true)
         .attr('source', `${sourceX},${sourceY}`)
         .attr('d', link({

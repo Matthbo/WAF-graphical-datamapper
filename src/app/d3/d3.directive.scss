@@ -1,11 +1,12 @@
 svg[appD3] {
   min-width: 50px;
   min-height: 50px;
+  font-weight: bold;
 
   .node {
     circle {
       fill: #999;
-      stroke: #999;
+      // stroke: #999;
 
       &.has-children {
         fill: #666;
@@ -19,7 +20,7 @@ svg[appD3] {
 
   .link {
     fill: none;
-    stroke: #999;
+    // stroke: #999;
     stroke-width: 1px;
   }
 
@@ -30,7 +31,7 @@ svg[appD3] {
   path.dragging,
   g.connections path {
     fill: none;
-    stroke: #4c4c4c;
+    // stroke: #4c4c4c;
     stroke-width: 2px;
   }
 
