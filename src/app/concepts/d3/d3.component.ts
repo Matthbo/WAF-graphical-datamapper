@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
-import { HierarchyNode, HierarchyPointNode } from 'd3-hierarchy';
-import { DataNode, Mappable, MappableDisplay } from 'src/app/d3/d3.types';
+import { CustomisationOptions, Mappable, MappableDisplay } from 'src/app/d3/d3.types';
 import { MappingService } from 'src/app/mapping/mapping.service';
-import { MappableToMappingFn } from 'src/app/mapping/mapping.types';
 
 
 @Component({
@@ -38,6 +36,12 @@ export class D3Component {
     prop3: null,
     prop4: null
   }
+
+  public customisationOptions: CustomisationOptions = {
+    connectionsColour: "#fff",
+    nodesColour: "#fff",
+    pathsColour: "#fff"
+  };
 
   constructor(private mappingService: MappingService) { }
 

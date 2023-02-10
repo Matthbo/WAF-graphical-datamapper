@@ -1,5 +1,10 @@
 <div class="flexbox">
-  <svg class="container" appD3 [input]="EXAMPLE_INPUT" [output]="EXAMPLE_OUTPUT" (mapping)="updateMappings($event)">Loading</svg>
+  <svg class="container" appD3
+    [input]="EXAMPLE_INPUT"
+    [output]="EXAMPLE_OUTPUT"
+    (mapping)="updateMappings($event)"
+    [(customisation)]="customisationOptions"
+  >Loading</svg>
   <div class="info">
     <h2>Mappings</h2>
     <table>

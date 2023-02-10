@@ -12,8 +12,11 @@ export class D3Directive implements AfterViewInit, OnDestroy, OnChanges {
   input: AnyObject = {};
   @Input()
   output: AnyObject = {};
+
   @Input()
-  customisation: CustomisationOptions = this.d3Service.customisationDefaults;
+  customisation!: CustomisationOptions;
+  @Output()
+  customisationChange = new EventEmitter<CustomisationOptions>;
 
   @Output()
   mapping = new EventEmitter<Mappable[]>();
@@ -55,20 +58,15 @@ export class D3Directive implements AfterViewInit, OnDestroy, OnChanges {
 
     // TODO resize on window resize
     const clusterWidth = svgWidth / 2 - 200;
-    // const inputCluster = this.d3Service.createCluster(inputData, clusterWidth, svgHeight);
-    // console.log("input cluster", inputCluster);
-    // this.d3Service.generateCluster(inputCluster, inputElem, clusterWidth, 40, 0, false);
-    // const outputCluster = this.d3Service.createCluster(outputData, clusterWidth, svgHeight);
-    // this.d3Service.generateCluster(outputCluster, outputElem, clusterWidth, svgWidth / 2 + 160, 0, true);
 
-    const generateInputCluster = this.d3Service.newGenerateCluster(inputData, clusterWidth, svgHeight);
+    const generateInputCluster = this.d3Service.generateCluster(inputData, clusterWidth, svgHeight);
     generateInputCluster(inputElem, 40, 0, false);
 
-    const generateOutputCluster = this.d3Service.newGenerateCluster(outputData, clusterWidth, svgHeight);
+    const generateOutputCluster = this.d3Service.generateCluster(outputData, clusterWidth, svgHeight);
     generateOutputCluster(outputElem, svgWidth / 2 + 160, 0, true);
 
     this.d3Service.test(this.d3Service.iconPlus);
-  
+
     this.d3Service.updateMappingsEvent.subscribe((mappings: Mappable[]) => {
       this.mapping.emit(mappings);
     });
@@ -79,8 +77,10 @@ export class D3Directive implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["customisation"]){
-      this.d3Service.setCustomisation(this.customisation);
+    if (changes["customisation"] && changes["customisation"].currentValue != null) {
+      console.log(changes["customisation"])
+      const optionsChange = this.d3Service.setCustomisation(this.customisation);
+      // this.customisationChange.emit(optionsChange);
     }
   }
 

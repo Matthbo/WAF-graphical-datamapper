@@ -34,12 +34,13 @@ export class D3Service {
       [K in keyof T]: [K, T[K]];
     }[keyof T][];
 
-    const newOptions: CustomisationOptions = {...this.customisationDefaults};
+    const newOptions: CustomisationOptions = { ...this.customisationDefaults };
     (Object.entries(options) as Entries<CustomisationOptions>).forEach(([key, value]) => {
-      if(value[0] == "#" && value.length > 0 && value.length <= 6)
+      if (value[0] == "#" && value.length > 0 && value.length <= 6)
         newOptions[key] = value;
     });
     this._customisationOptions = newOptions;
+    return newOptions;
   }
 
   getSelection<GElement extends BaseType, OldDatum>(element: GElement | string) {
@@ -77,7 +78,7 @@ export class D3Service {
   }
 
   // https://observablehq.com/@d3/collapsible-tree
-  newGenerateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
+  generateCluster(data: DataNode, clusterWidth: number, clusterHeight: number) {
     const animDuration = 300;
     const root = d3.hierarchy(data);
     const clusterLayout = d3.cluster<DataNode>()
@@ -211,7 +212,7 @@ export class D3Service {
     return update(root);
   }
 
-  private updateConnections(svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>){
+  private updateConnections(svgSelection: d3.Selection<SVGSVGElement, unknown, null, any>, link: d3.Link<any, d3.DefaultLinkObject, [number, number]>) {
     function getClusterPos(selection: HierarchyPointNodeSelection) {
       console.log(selection.node(), selection.empty())
       const clusterElem = d3.select(selection.node()!.parentElement!.parentElement!.parentElement);
